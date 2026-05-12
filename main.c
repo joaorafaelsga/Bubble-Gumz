@@ -2,12 +2,15 @@
 #include <raylib.h>
 
 int main() {
-    InitWindow(800, 600, "Player com animacao e flip");
+    ToggleFullscreen();
+    InitWindow(800, 600, "jogo");
     
-    Texture2D sprite = LoadTexture("sprite_gumz.png");
+   	
+    Texture2D sprite = LoadTexture("gumz.png");
+    SetTextureFilter(sprite, TEXTURE_FILTER_POINT);
 
-    int cols = 8;
-    int rows = 2;
+    int cols = 1;
+    int rows = 10;
     int totalFrames = 10;
 
     int currentFrame = 0;
@@ -24,6 +27,11 @@ int main() {
     int direction = 1;
 
     while (!WindowShouldClose()) {
+	// ================TELA CHEIA=================
+	
+	if (IsKeyPressed(KEY_F11)){
+		ToggleFullscreen();
+	}
 
         // ================= MOVIMENTO =================
         bool isMoving = false;
