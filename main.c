@@ -114,10 +114,10 @@ int main()
 {
     InitWindow(800, 600, "Beat'em Up Diferente");
 
-    Texture2D bg = LoadTexture("cenario1.png");
+    Texture2D bg = LoadTexture("assets/cenarios/cenario1.png");
 
-    Texture2D sprite1 = LoadTexture("gumz.png");   
-    Texture2D sprite2 = LoadTexture("bubble.png");  
+    Texture2D sprite1 = LoadTexture("assets/players/gumz.png");   
+    Texture2D sprite2 = LoadTexture("assets/players/bubble.png");  
 
     SetTextureFilter(sprite1, TEXTURE_FILTER_POINT);
     SetTextureFilter(sprite2, TEXTURE_FILTER_POINT);
