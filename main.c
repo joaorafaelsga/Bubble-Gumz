@@ -14,16 +14,45 @@ void ApplyHit(Player *target, Vector2 knockback)
 int main()
 {
     InitWindow(800, 600, "Beat'em Up");
-
+    
     Texture2D bg = LoadTexture("assets/cenarios/cenario1.png");
-    Texture2D sprite1 = LoadTexture("assets/players/gumz.png");   
-    Texture2D sprite2 = LoadTexture("assets/players/bubble.png");  
+    //GUMZ ART
+    Texture2D sprite1 = LoadTexture("assets/players/gumz.png"); 
+    Texture2D p1_walk = LoadTexture("assets/players/GumzWalk.webp");
+    Texture2D p1_attack = LoadTexture("assets/players/GumzAtk.png");
+    
+    //BUBBLES ART
+    Texture2D sprite2 = LoadTexture("assets/players/bubble.png");
+
+    Texture2D p2_attack = LoadTexture("assets/players/BubblesAtk.png"); 
 
     SetTextureFilter(sprite1, TEXTURE_FILTER_POINT);
     SetTextureFilter(sprite2, TEXTURE_FILTER_POINT);
+Player p1 = {
+    .position = {400,300},
+    .direction = 1,
+    .sprite = sprite1,
+    .walkSprite = p1_walk,
+    .attackSprite = p1_attack,
+    .cols = 1,
+    .rows = 10,
+    .totalFrames = 6,
+    .controls = 0,
+    .state = STATE_SPRITE
+};
 
-    Player p1 = { .position = {400,300}, .direction=1, .sprite=sprite1, .cols=1, .rows=10, .totalFrames=10, .controls=0 };
-    Player p2 = { .position = {200,300}, .direction=1, .sprite=sprite2, .cols=1, .rows=4, .totalFrames=4, .controls=1 };
+Player p2 = {
+    .position = {200,300},
+    .direction = 1,
+    .sprite = sprite2,
+
+    .attackSprite = p2_attack,
+    .cols = 1,
+    .rows = 4,
+    .totalFrames = 4,
+    .controls = 1,
+    .state = STATE_SPRITE
+};
     Hitbox punch = {0};
     Projectile bullet = {0};
 
@@ -46,7 +75,11 @@ int main()
         }
                 
             // SOCO (P2)
-        if (IsKeyPressed(KEY_K)) {
+        if (IsKeyPressed(KEY_K) && p2.state != STATE_ATTACK) {
+
+            p2.state = STATE_ATTACK;
+            p2.stateTimer = 0;
+
             punch.active = true;
             punch.timer = 0;
             punch.duration = 0.15f;
@@ -63,7 +96,11 @@ int main()
         }
 
         // PROJETIL (P1)
-        if (IsKeyPressed(KEY_R) && !bullet.active) {
+        if (IsKeyPressed(KEY_R) && !bullet.active && p1.state != STATE_ATTACK) {
+
+            p1.state = STATE_ATTACK;
+            p1.stateTimer = 0;
+
             bullet.active = true;
             bullet.timer = 0;
             bullet.lifetime = 1.0f;
@@ -86,7 +123,7 @@ int main()
 
         UpdateHitbox(&punch);
         UpdateProjectile(&bullet);
-         if (punch.active && CheckCollisionRecs(punch.rect, GetPlayerRect(&p1))) {
+        if (punch.active && CheckCollisionRecs(punch.rect, GetPlayerRect(&p1))) {
         ApplyHit(&p1, punch.knockback);
         punch.active = false;
         }

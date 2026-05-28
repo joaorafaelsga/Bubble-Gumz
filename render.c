@@ -19,7 +19,7 @@ void DrawPlayer(Player p)
         source.x += frameW;
         source.width = -frameW;
     }
-
+    
     Rectangle dest = {
         p.position.x,
         p.position.y,
@@ -27,7 +27,17 @@ void DrawPlayer(Player p)
         frameH
     };
 
-    DrawTexturePro(p.sprite, source, dest, (Vector2){0,0}, 0, WHITE);
+     Texture2D current;
+
+    if (p.state == STATE_ATTACK)
+        current = p.attackSprite;
+    else if (p.state == STATE_WALK)
+        current = p.walkSprite;
+    else
+        current = p.sprite; 
+    
+    DrawTexturePro(current, source, dest, (Vector2){0,0}, 0, WHITE);
+
 }
 
 void DrawPlayersSorted(Player *p1, Player *p2)
