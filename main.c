@@ -18,12 +18,12 @@ int main()
     Texture2D bg = LoadTexture("assets/cenarios/cenario1.png");
     //GUMZ ART
     Texture2D sprite1 = LoadTexture("assets/players/gumz.png"); 
-    Texture2D p1_walk = LoadTexture("assets/players/GumzWalk.webp");
+    Texture2D p1_walk = LoadTexture("assets/players/GumzWalk.png");
     Texture2D p1_attack = LoadTexture("assets/players/GumzAtk.png");
     
     //BUBBLES ART
     Texture2D sprite2 = LoadTexture("assets/players/bubble.png");
-
+    //Texture2D p2_walk = LoadTexture("assets/players/BubblesWalk.png");
     Texture2D p2_attack = LoadTexture("assets/players/BubblesAtk.png"); 
 
     SetTextureFilter(sprite1, TEXTURE_FILTER_POINT);
@@ -45,7 +45,7 @@ Player p2 = {
     .position = {200,300},
     .direction = 1,
     .sprite = sprite2,
-
+    //.walkSprite = p2_walk,
     .attackSprite = p2_attack,
     .cols = 1,
     .rows = 4,
