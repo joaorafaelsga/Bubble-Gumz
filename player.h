@@ -4,15 +4,22 @@
 #include <raylib.h>
 
 typedef struct {
+    Texture2D texture;
+    int cols;
+    int rows;
+    int totalFrames;
+} Animation;
+
+typedef struct {
     Vector2 position;
     int direction;
 
     int frame;
     float animTime;
 
-    Texture2D sprite;
-    Texture2D walkSprite;
-    Texture2D attackSprite;
+    Animation sprite;
+    Animation walkSprite;
+    Animation attackSprite;
 
     int cols;
     int rows;

@@ -2,20 +2,20 @@
 
 void DrawPlayer(Player p)
 {
-    Texture2D current;
+    Animation anim;
 
     if (p.state == STATE_ATTACK)
-        current = p.attackSprite;
+        anim = p.attackSprite;
     else if (p.state == STATE_WALK)
-        current = p.walkSprite;
+        anim = p.walkSprite;
     else
-        current = p.sprite;
+        anim = p.sprite;
 
-    int frameW = current.width / p.cols;
-    int frameH = current.height / p.rows;
+    int frameW = anim.texture.width / anim.cols;
+    int frameH = anim.texture.height / anim.rows;
 
-    int row = p.frame / p.cols;
-    int col = p.frame % p.cols;
+    int row = p.frame / anim.cols;
+    int col = p.frame % anim.cols;
 
     Rectangle source = {
         col * frameW,
@@ -37,7 +37,7 @@ void DrawPlayer(Player p)
         frameH
     };
 
-    DrawTexturePro(current, source, dest, (Vector2){0,0}, 0, WHITE);
+    DrawTexturePro(anim.texture, source, dest, (Vector2){0,0}, 0, WHITE);
 }
 
 void DrawPlayersSorted(Player *p1, Player *p2)

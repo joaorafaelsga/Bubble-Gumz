@@ -28,31 +28,29 @@ int main()
 
     SetTextureFilter(sprite1, TEXTURE_FILTER_POINT);
     SetTextureFilter(sprite2, TEXTURE_FILTER_POINT);
-Player p1 = {
-    .position = {400,300},
-    .direction = 1,
-    .sprite = sprite1,
-    .walkSprite = p1_walk,
-    .attackSprite = p1_attack,
-    .cols = 1,
-    .rows = 10,
-    .totalFrames = 6,
-    .controls = 0,
-    .state = STATE_SPRITE
-};
+    
+    //Gumz
+    Player p1 = {0};
+    p1.position = (Vector2){400,300};
+    p1.direction = 1;
+    p1.controls = 0;
+    p1.state = STATE_SPRITE;
 
-Player p2 = {
-    .position = {200,300},
-    .direction = 1,
-    .sprite = sprite2,
-    //.walkSprite = p2_walk,
-    .attackSprite = p2_attack,
-    .cols = 1,
-    .rows = 4,
-    .totalFrames = 4,
-    .controls = 1,
-    .state = STATE_SPRITE
-};
+    p1.sprite = (Animation){ sprite1, 1, 10 };     
+    p1.walkSprite = (Animation){ p1_walk, 1, 3 };  
+    p1.attackSprite = (Animation){ p1_attack, 1, 2 };
+
+    //Bubbles
+    Player p2 = {0};
+    p2.position = (Vector2){200,300};
+    p2.direction = 1;
+    p2.controls = 1;
+    p2.state = STATE_SPRITE;
+
+    p2.sprite = (Animation){ sprite2, 1, 4 };
+    p2.walkSprite = (Animation){ p1_walk, 1, 3 }; 
+    p2.attackSprite = (Animation){ p2_attack, 1, 5 };
+
     Hitbox punch = {0};
     Projectile bullet = {0};
 
