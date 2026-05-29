@@ -15,7 +15,7 @@ int main()
 {
     InitWindow(800, 600, "Beat'em Up");
     
-    Texture2D bg = LoadTexture("assets/cenarios/cenario1.png");
+    Texture2D bg = LoadTexture("assets/cenarios/cenario1_2.0.png");
     //GUMZ ART
     Texture2D sprite1 = LoadTexture("assets/players/gumz.png"); 
     Texture2D p1_walk = LoadTexture("assets/players/GumzWalk.png");
