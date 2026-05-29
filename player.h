@@ -33,6 +33,10 @@ typedef struct {
 
     int state;
     float stateTimer;
+
+    int hp;
+    int maxHp
+    
 } Player;
 
 typedef enum {
