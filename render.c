@@ -2,8 +2,17 @@
 
 void DrawPlayer(Player p)
 {
-    int frameW = p.sprite.width / p.cols;
-    int frameH = p.sprite.height / p.rows;
+    Texture2D current;
+
+    if (p.state == STATE_ATTACK)
+        current = p.attackSprite;
+    else if (p.state == STATE_WALK)
+        current = p.walkSprite;
+    else
+        current = p.sprite;
+
+    int frameW = current.width / p.cols;
+    int frameH = current.height / p.rows;
 
     int row = p.frame / p.cols;
     int col = p.frame % p.cols;
@@ -15,11 +24,12 @@ void DrawPlayer(Player p)
         frameH
     };
 
-    if (p.direction == -1) {
+    if (p.direction == -1)
+    {
         source.x += frameW;
         source.width = -frameW;
     }
-    
+
     Rectangle dest = {
         p.position.x,
         p.position.y,
@@ -27,32 +37,19 @@ void DrawPlayer(Player p)
         frameH
     };
 
-     Texture2D current;
-
-    if (p.state == STATE_ATTACK)
-        current = p.attackSprite;
-    else if (p.state == STATE_WALK)
-        current = p.walkSprite;
-    else
-        current = p.sprite; 
-    
     DrawTexturePro(current, source, dest, (Vector2){0,0}, 0, WHITE);
-
 }
 
 void DrawPlayersSorted(Player *p1, Player *p2)
 {
-    Player *first;
-    Player *second;
-
-    if (p1->position.y < p2->position.y) {
-        first = p1;
-        second = p2;
-    } else {
-        first = p2;
-        second = p1;
+    if (p1->position.y < p2->position.y)
+    {
+        DrawPlayer(*p1);
+        DrawPlayer(*p2);
     }
-
-    DrawPlayer(*first);
-    DrawPlayer(*second);
+    else
+    {
+        DrawPlayer(*p2);
+        DrawPlayer(*p1);
+    }
 }

@@ -79,6 +79,8 @@ Player p2 = {
 
             p2.state = STATE_ATTACK;
             p2.stateTimer = 0;
+            p2.frame = 0;
+            p2.animTime = 0;
 
             punch.active = true;
             punch.timer = 0;
@@ -100,6 +102,8 @@ Player p2 = {
 
             p1.state = STATE_ATTACK;
             p1.stateTimer = 0;
+            p1.frame = 0;
+            p1.animTime = 0;
 
             bullet.active = true;
             bullet.timer = 0;

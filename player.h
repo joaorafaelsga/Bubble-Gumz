@@ -23,7 +23,7 @@ typedef struct {
     Vector2 velocity;
     bool isHit;
     float hitTimer;
-    
+
     int state;
     float stateTimer;
 } Player;
@@ -36,6 +36,6 @@ typedef enum {
 } PlayerState;
 
 void UpdatePlayer(Player *p, float speed, Rectangle *walls, int wallCount, float animSpeed);
-Rectangle GetPlayerRect(Player * p);
+Rectangle GetPlayerRect(Player *p);
 
 #endif
