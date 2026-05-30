@@ -35,7 +35,7 @@ typedef struct {
     float stateTimer;
 
     int hp;
-    int maxHp
+    int maxHp;
     
 } Player;
 

@@ -11,7 +11,7 @@ void UpdatePlayer(Player *p, float speed, Rectangle *walls, int wallCount, float
         if (IsKeyDown(KEY_W)) { next.y -= speed; moving = true; }
         if (IsKeyDown(KEY_S)) { next.y += speed; moving = true; }
 
-        if (IsKeyPressed(KEY_F) && p->state != STATE_ATTACK)
+        if (IsKeyPressed(KEY_R) && p->state != STATE_ATTACK)
         {
             p->state = STATE_ATTACK;
             p->frame = 0;
@@ -24,7 +24,7 @@ void UpdatePlayer(Player *p, float speed, Rectangle *walls, int wallCount, float
         if (IsKeyDown(KEY_UP)) { next.y -= speed; moving = true; }
         if (IsKeyDown(KEY_DOWN)) { next.y += speed; moving = true; }
 
-        if (IsKeyPressed(KEY_KP_0) && p->state != STATE_ATTACK)
+        if (IsKeyPressed(KEY_K) && p->state != STATE_ATTACK)
         {
             p->state = STATE_ATTACK;
             p->frame = 0;

@@ -16,5 +16,5 @@ void UpdateProjectile(Projectile *p)
 void DrawProjectile(Projectile p)
 {
     if (p.active)
-        DrawRectangleRec(p.rect, BLUE);
+        DrawRectangleRec(p.rect, PINK);
 }
