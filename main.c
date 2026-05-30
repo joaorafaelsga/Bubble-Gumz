@@ -23,7 +23,7 @@ int main()
     
     //BUBBLES ART
     Texture2D sprite2 = LoadTexture("assets/players/bubble.png");
-    //Texture2D p2_walk = LoadTexture("assets/players/BubblesWalk.png");
+    Texture2D p2_walk = LoadTexture("assets/players/BubblesWalk.png");
     Texture2D p2_attack = LoadTexture("assets/players/BubblesAtk.png"); 
 
     SetTextureFilter(sprite1, TEXTURE_FILTER_POINT);
@@ -48,7 +48,7 @@ int main()
     p2.state = STATE_SPRITE;
 
     p2.sprite = (Animation){ sprite2, 1, 4 };
-    p2.walkSprite = (Animation){ p1_walk, 1, 3 }; 
+    p2.walkSprite = (Animation){ p2_walk, 1, 3 }; 
     p2.attackSprite = (Animation){ p2_attack, 1, 5 };
 
     Hitbox punch = {0};
