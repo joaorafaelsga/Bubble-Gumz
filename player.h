@@ -2,6 +2,7 @@
 #define PLAYER_H
 
 #include <raylib.h>
+#include <stdbool.h>
 
 typedef struct {
     Texture2D texture;
@@ -10,7 +11,7 @@ typedef struct {
     int totalFrames;
 } Animation;
 
-typedef struct {
+typedef struct Player {
     Vector2 position;
     int direction;
 
@@ -20,6 +21,7 @@ typedef struct {
     Animation sprite;
     Animation walkSprite;
     Animation attackSprite;
+    Animation blockSprite;
 
     int cols;
     int rows;
@@ -36,6 +38,8 @@ typedef struct {
 
     int hp;
     int maxHp;
+
+    bool isBlocking;
     
 } Player;
 
@@ -43,7 +47,8 @@ typedef enum {
     STATE_SPRITE,
     STATE_WALK,
     STATE_ATTACK,
-    STATE_HIT
+    STATE_HIT,
+    STATE_BLOCK,
 } PlayerState;
 
 void UpdatePlayer(Player *p, float speed, Rectangle *walls, int wallCount, float animSpeed);

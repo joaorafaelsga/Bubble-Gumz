@@ -9,7 +9,7 @@ void ApplyHit(Player *target, Vector2 knockback)
     target->isHit = true;
     target->velocity = knockback;
     target->hitTimer = 0;
-}
+}   
 
 int main()
 {
@@ -20,12 +20,13 @@ int main()
     Texture2D sprite1 = LoadTexture("assets/players/gumz.png"); 
     Texture2D p1_walk = LoadTexture("assets/players/GumzWalk.png");
     Texture2D p1_attack = LoadTexture("assets/players/GumzAtk.png");
-    
+    Texture2D p1_block = LoadTexture("assets/Enemies/Enemy1.png");
+
     //BUBBLES ART
     Texture2D sprite2 = LoadTexture("assets/players/bubble.png");
     Texture2D p2_walk = LoadTexture("assets/players/BubblesWalk.png");
     Texture2D p2_attack = LoadTexture("assets/players/BubblesAtk.png"); 
-
+    Texture2D p2_block = LoadTexture("assets/Enemies/Enemy1.png");
     SetTextureFilter(sprite1, TEXTURE_FILTER_POINT);
     SetTextureFilter(sprite2, TEXTURE_FILTER_POINT);
     
@@ -39,6 +40,7 @@ int main()
     p1.sprite = (Animation){ sprite1, 1, 10 };     
     p1.walkSprite = (Animation){ p1_walk, 1, 3 };  
     p1.attackSprite = (Animation){ p1_attack, 1, 2 };
+    p1.blockSprite = (Animation){ p2_block, 1, 7 };
 
     //Bubbles
     Player p2 = {0};
@@ -50,6 +52,7 @@ int main()
     p2.sprite = (Animation){ sprite2, 1, 4 };
     p2.walkSprite = (Animation){ p2_walk, 1, 3 }; 
     p2.attackSprite = (Animation){ p2_attack, 1, 5 };
+    p2.blockSprite = (Animation){ p2_block, 1, 7 };
 
     Hitbox punch = {0};
     Projectile bullet = {0};
@@ -73,6 +76,7 @@ int main()
         }
                 
             // SOCO (P2)
+        // SOCO (P2)
         if (IsKeyPressed(KEY_K) && p2.state != STATE_ATTACK) {
 
             p2.state = STATE_ATTACK;
@@ -93,6 +97,8 @@ int main()
                 40,
                 40
             };
+
+            punch.owner = &p2; 
         }
 
         // PROJETIL (P1)
@@ -125,16 +131,21 @@ int main()
 
         UpdateHitbox(&punch);
         UpdateProjectile(&bullet);
-        if (punch.active && CheckCollisionRecs(punch.rect, GetPlayerRect(&p1))) {
-        ApplyHit(&p1, punch.knockback);
-        punch.active = false;
-        }
 
-        if (bullet.active && CheckCollisionRecs(bullet.rect, GetPlayerRect(&p2))) {
-            ApplyHit(&p2, bullet.knockback);
-            bullet.active = false;
+        CheckHit(&punch, &p1);
+        CheckHit(&punch, &p2);
+        
+        /*if (bullet.active) {
+            if (CheckCollisionRecs(bullet.rect, GetPlayerRect(&p1)) && punch.owner != &p1) {
+                ApplyHit(&p1, bullet.knockback);
+                bullet.active = false;
+            }
+            if (CheckCollisionRecs(bullet.rect, GetPlayerRect(&p2)) && punch.owner != &p2) {
+                ApplyHit(&p2, bullet.knockback);
+                bullet.active = false;
+            }
         }
-
+        */
         BeginDrawing();
         ClearBackground(RAYWHITE);
 

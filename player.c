@@ -6,42 +6,59 @@ void UpdatePlayer(Player *p, float speed, Rectangle *walls, int wallCount, float
     bool moving = false;
 
     if (p->controls == 0) {
-        if (IsKeyDown(KEY_D)) { next.x += speed; p->direction = 1; moving = true; }
-        if (IsKeyDown(KEY_A)) { next.x -= speed; p->direction = -1; moving = true; }
-        if (IsKeyDown(KEY_W)) { next.y -= speed; moving = true; }
-        if (IsKeyDown(KEY_S)) { next.y += speed; moving = true; }
+        p->isBlocking = (IsKeyDown(KEY_Q) && p->state != STATE_ATTACK);
 
-        if (IsKeyPressed(KEY_R) && p->state != STATE_ATTACK)
-        {
-            p->state = STATE_ATTACK;
-            p->frame = 0;
+        if (!p->isBlocking) { 
+            if (IsKeyDown(KEY_D)) { next.x += speed; p->direction =  1; moving = true; }
+            if (IsKeyDown(KEY_A)) { next.x -= speed; p->direction = -1; moving = true; }
+            if (IsKeyDown(KEY_W)) { next.y -= speed; moving = true; }
+            if (IsKeyDown(KEY_S)) { next.y += speed; moving = true; }
+        }
+
+        if (IsKeyPressed(KEY_R) && p->state != STATE_ATTACK && !p->isBlocking) {
+            p->state    = STATE_ATTACK;
+            p->frame    = 0;
             p->animTime = 0;
         }
+        
     } 
     else {
-        if (IsKeyDown(KEY_RIGHT)) { next.x += speed; p->direction = 1; moving = true; }
-        if (IsKeyDown(KEY_LEFT)) { next.x -= speed; p->direction = -1; moving = true; }
-        if (IsKeyDown(KEY_UP)) { next.y -= speed; moving = true; }
-        if (IsKeyDown(KEY_DOWN)) { next.y += speed; moving = true; }
+        p->isBlocking = (IsKeyDown(KEY_KP_0) && p->state != STATE_ATTACK);
 
-        if (IsKeyPressed(KEY_K) && p->state != STATE_ATTACK)
-        {
-            p->state = STATE_ATTACK;
-            p->frame = 0;
+        if (!p->isBlocking) {
+            if (IsKeyDown(KEY_RIGHT)) { next.x += speed; p->direction =  1; moving = true; }
+            if (IsKeyDown(KEY_LEFT))  { next.x -= speed; p->direction = -1; moving = true; }
+            if (IsKeyDown(KEY_UP))    { next.y -= speed; moving = true; }
+            if (IsKeyDown(KEY_DOWN))  { next.y += speed; moving = true; }
+        }
+        if (IsKeyPressed(KEY_K) && p->state != STATE_ATTACK && !p->isBlocking) {
+            p->state    = STATE_ATTACK;
+            p->frame    = 0;
             p->animTime = 0;
         }
     }
 
     // ANIMAÇÃO 
-    Animation *anim;
+    if (p->state != STATE_ATTACK)
+    {
+        if (p->isBlocking)
+            p->state = STATE_BLOCK;
+        else if (moving)
+            p->state = STATE_WALK;
+        else
+            p->state = STATE_SPRITE;
+    }
 
+    Animation *anim;
     if (p->state == STATE_ATTACK)
         anim = &p->attackSprite;
     else if (p->state == STATE_WALK)
         anim = &p->walkSprite;
+    else if (p->state == STATE_BLOCK)
+        anim = &p->blockSprite;
     else
         anim = &p->sprite;
-
+    
     int frameW = anim->texture.width / anim->cols;
     int frameH = anim->texture.height / anim->rows;
 
@@ -81,18 +98,7 @@ void UpdatePlayer(Player *p, float speed, Rectangle *walls, int wallCount, float
     }
 
     if (!colX) p->position.x = next.x;
-    if (!colY) p->position.y = next.y;
-
-    
-    if (p->state != STATE_ATTACK)
-    {
-        if (moving)
-            p->state = STATE_WALK;
-        else
-            p->state = STATE_SPRITE;
-    }
-
-    
+    if (!colY) p->position.y = next.y;    
 
     if (p->isHit)
     {
@@ -117,6 +123,8 @@ Rectangle GetPlayerRect(Player *p)
         anim = &p->attackSprite;
     else if (p->state == STATE_WALK)
         anim = &p->walkSprite;
+    else if (p->state == STATE_BLOCK)
+        anim = &p->blockSprite;
     else
         anim = &p->sprite;
 

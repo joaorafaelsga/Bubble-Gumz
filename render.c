@@ -8,6 +8,8 @@ void DrawPlayer(Player p)
         anim = p.attackSprite;
     else if (p.state == STATE_WALK)
         anim = p.walkSprite;
+     else if (p.state == STATE_BLOCK)
+        anim = p.blockSprite;
     else
         anim = p.sprite;
 
