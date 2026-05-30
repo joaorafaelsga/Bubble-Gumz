@@ -70,7 +70,10 @@ int main()
     Texture2D sprite2 = LoadTexture("assets/players/bubble.png");
     Texture2D p2_walk = LoadTexture("assets/players/BubblesWalk.png");
     Texture2D p2_attack = LoadTexture("assets/players/BubblesAtk.png"); 
-    Texture2D p2_block = LoadTexture("assets/Enemies/Enemy1.png");
+    Texture2D p2_block = LoadTexture("assets/players/BubblesBlock.png");
+
+
+    Texture2D particleSheet = LoadTexture("assets/particles/p-atck.png");
     SetTextureFilter(sprite1, TEXTURE_FILTER_POINT);
     SetTextureFilter(sprite2, TEXTURE_FILTER_POINT);
     
@@ -82,11 +85,12 @@ int main()
     p1.state = STATE_SPRITE;
     p1.hp = 100;
     p1.maxHp = 100;
+    
 
     p1.sprite = (Animation){ sprite1, 1, 10 };     
     p1.walkSprite = (Animation){ p1_walk, 1, 3 };  
     p1.attackSprite = (Animation){ p1_attack, 1, 2 };
-    p1.blockSprite = (Animation){ p2_block, 1, 7 };
+    p1.blockSprite = (Animation){ p1_block, 1, 7 };
 
     //Bubbles
     Player p2 = {0};
@@ -100,10 +104,12 @@ int main()
     p2.sprite = (Animation){ sprite2, 1, 4 };
     p2.walkSprite = (Animation){ p2_walk, 1, 3 }; 
     p2.attackSprite = (Animation){ p2_attack, 1, 5 };
-    p2.blockSprite = (Animation){ p2_block, 1, 7 };
+    p2.blockSprite = (Animation){ p2_block, 1, 1 };
 
     Hitbox punch = {0};
     Projectile bullet = {0};
+    bullet.texture = particleSheet;
+    punch.texture  = particleSheet;
 
     Rectangle walls[4] = {
         {0, 80, 800, 20},
@@ -123,7 +129,7 @@ int main()
             ToggleFullscreen();
         }
                 
-            // SOCO (P2)
+        
         // SOCO (P2)
         if (IsKeyPressed(KEY_K) && p2.state != STATE_ATTACK) {
 
@@ -140,8 +146,8 @@ int main()
             punch.knockback = (Vector2){ p2.direction * 300, -50 };
 
             punch.rect = (Rectangle){
-                p2.position.x + (p2.direction == 1 ? 40 : -40),
-                p2.position.y,
+                p2.position.x + (p2.direction == 1 ? 40 : -20),
+                p2.position.y + 35,
                 40,
                 40
             };
@@ -162,8 +168,8 @@ int main()
             bullet.lifetime = 1.0f;
 
             bullet.rect = (Rectangle){
-                p1.position.x,
-                p1.position.y,
+                p1.position.x + (p1.direction == 1 ? 44 : -20),
+                p1.position.y + 25,
                 20,
                 20
             };
@@ -180,21 +186,63 @@ int main()
         UpdateHitbox(&punch);
         UpdateProjectile(&bullet);
         
-        // Colisões aplicando dano e ativando UI flutuante
-        if (punch.active && CheckCollisionRecs(punch.rect, GetPlayerRect(&p1))) {
-            ApplyHit(&p1, punch.knockback, punch.damage);
-            Vector2 textPos = { p1.position.x + 20, p1.position.y - 20 };
-            AddDamageText(&damageList, punch.damage, textPos);
+
+        if (punch.active && punch.owner != &p1 &&
+            CheckCollisionRecs(punch.rect, GetPlayerRect(&p1)))
+        {
+            float attackDir = punch.owner->direction;
+            bool fromFront  = (p1.direction == -attackDir);
+
+            if (p1.isBlocking && fromFront) {
+                // Bloqueio bem-sucedido — knockback leve
+                p1.velocity.x = punch.knockback.x * 0.2f;
+                p1.velocity.y = punch.knockback.y * 0.2f;
+            } else {
+                ApplyHit(&p1, punch.knockback, punch.damage);
+                Vector2 textPos = { p1.position.x + 20, p1.position.y - 20 };
+                AddDamageText(&damageList, punch.damage, textPos);
+            }
             punch.active = false;
         }
 
-        if (bullet.active && CheckCollisionRecs(bullet.rect, GetPlayerRect(&p2))) {
-            ApplyHit(&p2, bullet.knockback, bullet.damage);
-            Vector2 textPos = { p2.position.x + 20, p2.position.y - 20 };
-            AddDamageText(&damageList, bullet.damage, textPos);
-            bullet.active = false;
+        if (punch.active && punch.owner != &p2 &&
+            CheckCollisionRecs(punch.rect, GetPlayerRect(&p2)))
+        {
+            float attackDir = punch.owner->direction;
+            bool fromFront  = (p2.direction == -attackDir);
 
+            if (p1.isBlocking && fromFront) {
+                p1.velocity.x = punch.knockback.x * 0.2f;
+                p1.velocity.y = punch.knockback.y * 0.2f;
+                p1.isHit      = true;   // ✅ necessário para aplicar o knockback
+                p1.hitTimer   = 0;
+            } else {
+                ApplyHit(&p2, punch.knockback, punch.damage);
+                Vector2 textPos = { p2.position.x + 20, p2.position.y - 20 };
+                AddDamageText(&damageList, punch.damage, textPos);
+            }
+            punch.active = false;
         }
+        
+
+        // Projétil — só acerta inimigos (quando implementar)
+        if (bullet.active && CheckCollisionRecs(bullet.rect, GetPlayerRect(&p2)))
+{
+            bool fromFront = (p2.direction == -p1.direction);
+
+            if (p2.isBlocking && fromFront) {
+                p2.velocity.x = bullet.knockback.x * 0.2f;
+                p2.velocity.y = bullet.knockback.y * 0.2f;
+                p2.isHit      = true;
+                p2.hitTimer   = 0;
+            } else {
+                ApplyHit(&p2, bullet.knockback, bullet.damage);
+                Vector2 textPos = { p2.position.x + 20, p2.position.y - 20 };
+                AddDamageText(&damageList, bullet.damage, textPos);
+            }
+            bullet.active = false;
+        }
+        
         BeginDrawing();
         ClearBackground(RAYWHITE);
 
@@ -205,8 +253,8 @@ int main()
 
         DrawPlayersSorted(&p1, &p2);
 
-        DrawHitbox(punch);
-        DrawProjectile(bullet);
+        DrawHitbox(punch, p2.direction);
+        DrawProjectile(bullet, p1.direction);
 
         // INTERFACE (BARRAS DE VIDA E DANOS)
         DrawHealthBar(20, 30, p1.hp, p1.maxHp, GREEN, "GUMZ (P1)");

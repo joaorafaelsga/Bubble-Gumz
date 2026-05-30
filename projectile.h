@@ -14,9 +14,14 @@ typedef struct {
     Vector2 knockback;
 
     bool active;
+
+    Texture2D texture;
+    int frame;
+    float animTime;
+
 } Projectile;
 
 void UpdateProjectile(Projectile *p);
-void DrawProjectile(Projectile p);
+void DrawProjectile(Projectile p, int direction);
 
 #endif

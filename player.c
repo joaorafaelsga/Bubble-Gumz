@@ -102,19 +102,32 @@ void UpdatePlayer(Player *p, float speed, Rectangle *walls, int wallCount, float
 
     if (p->isHit)
     {
-        p->position.x += p->velocity.x * GetFrameTime();
-        p->position.y += p->velocity.y * GetFrameTime();
+        Vector2 knockNext = p->position;
+        knockNext.x += p->velocity.x * GetFrameTime();
+        knockNext.y += p->velocity.y * GetFrameTime();
+
+        Rectangle kRectX = { knockNext.x,    p->position.y, (float)frameW, (float)frameH };
+        Rectangle kRectY = { p->position.x,  knockNext.y,   (float)frameW, (float)frameH };
+
+        bool kColX = false, kColY = false;
+
+        for (int i = 0; i < wallCount; i++) {
+            if (CheckCollisionRecs(kRectX, walls[i])) kColX = true;
+            if (CheckCollisionRecs(kRectY, walls[i])) kColY = true;
+        }
+
+        if (!kColX) p->position.x = knockNext.x;
+        if (!kColY) p->position.y = knockNext.y;
 
         p->hitTimer += GetFrameTime();
-
         if (p->hitTimer > 0.2f)
         {
-            p->isHit = false;
-            p->velocity = (Vector2){0,0};
+            p->isHit    = false;
+            p->hitTimer = 0;
+            p->velocity = (Vector2){0, 0};
         }
     }
 }
-
 Rectangle GetPlayerRect(Player *p)
 {
     Animation *anim;

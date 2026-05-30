@@ -28,6 +28,12 @@ void CheckHit(Hitbox *h, Player *target)
 void UpdateHitbox(Hitbox *h)
 {
     if (!h->active) return;
+    
+    h->animTime += GetFrameTime();
+    if (h->animTime >= 0.1f) {
+        h->animTime = 0;
+        h->frame = (h->frame + 1) % 2;
+    }
 
     h->timer += GetFrameTime();
 
@@ -36,8 +42,21 @@ void UpdateHitbox(Hitbox *h)
 }
 
 
-void DrawHitbox(Hitbox h)
+void DrawHitbox(Hitbox h, int direction)
 {
-    if (h.active)
-        DrawRectangleLinesEx(h.rect, 2, RED);
+    if (!h.active) return;
+
+    int frameH = h.texture.height / 4; 
+    int frameW = h.texture.width;
+    
+    Rectangle source = { 0, h.frame * frameH, frameW, frameH };
+
+    if (direction == -1) {
+        source.x = frameW;
+        source.width = -frameW;
+    }
+
+   
+    Rectangle dest   = { h.rect.x, h.rect.y, h.rect.width, h.rect.height };
+    DrawTexturePro(h.texture, source, dest, (Vector2){0,0}, 0, WHITE);
 }

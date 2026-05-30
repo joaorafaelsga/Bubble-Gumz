@@ -16,10 +16,14 @@ typedef struct {
     bool active;
 
     Player *owner;
+
+    Texture2D texture;
+    int frame;
+    float animTime;
 } Hitbox;
 
 void UpdateHitbox(Hitbox *h);
-void DrawHitbox(Hitbox h);
+void DrawHitbox(Hitbox h, int direction);
 void CheckHit(Hitbox *h, Player *target);
 
 #endif
