@@ -7,7 +7,7 @@
 #include "combat.h"
 #include "projectile.h"
 #include "ui.h"
-
+#include "menu.h"
 
 // (Sistema de Scores)
 #define MAX_SCORES 5
@@ -59,7 +59,9 @@ int main()
     LoadScores();
     DamageNode *damageList = NULL;
     
+    //CENARIOS
     Texture2D bg = LoadTexture("assets/cenarios/cenario1_2.0.png");
+    Texture2D menuBg = LoadTexture("assets/cenarios/Cenario2.png");
     //GUMZ ART
     Texture2D sprite1 = LoadTexture("assets/players/gumz.png"); 
     Texture2D p1_walk = LoadTexture("assets/players/GumzWalk.png");
@@ -76,6 +78,11 @@ int main()
     Texture2D particleSheet = LoadTexture("assets/particles/p-atck.png");
     SetTextureFilter(sprite1, TEXTURE_FILTER_POINT);
     SetTextureFilter(sprite2, TEXTURE_FILTER_POINT);
+
+    Menu menu;
+    InitMenu(&menu, menuBg);
+    GameScreen currentScreen = SCREEN_MENU;
+    int currentFase = 0;
     
     //Gumz
     Player p1 = {0};
@@ -128,7 +135,31 @@ int main()
         if(IsKeyPressed(KEY_F11)){
             ToggleFullscreen();
         }
-                
+        //MENU
+        if (currentScreen == SCREEN_MENU)
+        {
+            if (menu.currentItem == MENU_NEWGAME && IsKeyPressed(KEY_ENTER))
+            {
+                for (int i = 0; i < MAX_SCORES; i++) {
+                    strcpy(topNames[i], "---");
+                    topScores[i] = 0;
+                }
+                SaveScores();
+                DeleteSave();
+                currentFase = 0;
+            }
+
+            int savedFase = LoadGame();
+            currentScreen = UpdateMenu(&menu);
+
+            BeginDrawing();
+            ClearBackground(BLACK);
+            DrawMenu(menu, topScores[0], topNames[0], savedFase);
+            EndDrawing();
+
+            continue; 
+        }
+
         
         // SOCO (P2)
         if (IsKeyPressed(KEY_K) && p2.state != STATE_ATTACK) {
@@ -214,7 +245,7 @@ int main()
             if (p1.isBlocking && fromFront) {
                 p1.velocity.x = punch.knockback.x * 0.2f;
                 p1.velocity.y = punch.knockback.y * 0.2f;
-                p1.isHit      = true;   // ✅ necessário para aplicar o knockback
+                p1.isHit      = true;
                 p1.hitTimer   = 0;
             } else {
                 ApplyHit(&p2, punch.knockback, punch.damage);
@@ -242,7 +273,7 @@ int main()
             }
             bullet.active = false;
         }
-        
+
         BeginDrawing();
         ClearBackground(RAYWHITE);
 
