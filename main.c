@@ -11,7 +11,7 @@
 #include "wave.h"
 #include "enemy.h"
 #include "save_system.h" 
-
+#include "cutscene.h"  
 
 // MATRIZES DE SCORES
 #define MAX_SCORES 5
@@ -60,6 +60,9 @@ void ApplyHit(Player *target, Vector2 knockback, int damage)
 int main()
 {
     InitWindow(800, 600, "Beat'em Up - Bubble Gumz");
+
+    Cutscene cutscene;
+    InitCutscene(&cutscene); 
 
     LoadScores();
     DamageNode *damageList = NULL;
@@ -157,12 +160,11 @@ int main()
 
         if(IsKeyPressed(KEY_F11)) ToggleFullscreen();
         
-        // VÍNCULO: TELA DE MENU COM O SAVE SYSTEM
+        //TELA DE MENU COM O SAVE SYSTEM
 
         if (currentScreen == SCREEN_MENU)
         {
-            // Se o utilizador pressionar ENTER numa opção do menu
-            if (menu.currentItem == MENU_NEWGAME && IsKeyPressed(KEY_ENTER))
+            if (menu.currentItem == MENU_NEWGAME && IsKeyPressed(KEY_SPACE))
             {
                 // Opção NOVO JOGO: Reseta scores e limpa arquivos antigos de save
                 for (int i = 0; i < MAX_SCORES; i++) {
@@ -207,6 +209,19 @@ int main()
             EndDrawing();
             continue; 
         }
+        if (currentScreen == SCREEN_CUTSCENE)
+        {
+            UpdateCutscene(&cutscene);
+
+            if (cutscene.finished)
+                currentScreen = SCREEN_GAME;
+
+            BeginDrawing();
+            ClearBackground(BLACK);
+            DrawCutscene(cutscene);
+            EndDrawing();
+            continue;
+        }
 
         
         // SISTEMA DE SAVE/LOAD
@@ -228,9 +243,8 @@ int main()
 
         UpdateEnemies(enemies, &p1, &p2, &enemyBullets, walls, 4);
         UpdateEnemyBullets(&enemyBullets, &p1, &p2);
-        UpdateWaves(&ws, &enemies, &enemyBullets,
-                    enemy1Sprite, enemy1Atk,
-                    enemy2Sprite, enemy2Atk, currentFase);
+        UpdateWaves(&ws, &enemies, &enemyBullets, enemy1Sprite, enemy1Atk,
+        enemy2Sprite, enemy2Atk, currentFase,&p1, &p2);
 
         if (IsFaseComplete(ws) && currentFase == 1)
         {   
@@ -239,20 +253,20 @@ int main()
             bg = LoadTexture("assets/cenarios/cenario2.png");
             FreeEnemyBullets(&enemyBullets);
             InitWaves(&ws, 1);
-            SpawnWave(&ws, &enemies,
-                    enemy1Sprite, enemy1Atk,
-                    enemy2Sprite, enemy2Atk, currentFase);
+            SpawnWave(&ws, &enemies,enemy1Sprite, enemy1Atk,enemy2Sprite, enemy2Atk, currentFase);
             SaveGame(currentFase);
-            if (p1.isDead) {
+
+            if (p1.isDead) { 
                 p1.isDead = false;
-                p1.hp = p1.maxHp / 2;
-                p1.state;
-            }  
-            if (p2.isDead) {
-                p2.isDead = false;
-                p2.hp = p2.maxHp / 2;
-                p2.state = STATE_SPRITE;
+                p1.hp = p1.maxHp / 2; 
+                p1.state = STATE_SPRITE; 
             }
+            if (p2.isDead) { 
+                p2.isDead = false; 
+                p2.hp = p2.maxHp / 2; 
+                p2.state = STATE_SPRITE; 
+            }
+            
         }
         
 
@@ -262,7 +276,6 @@ int main()
             bool fromFront  = (p1.direction == -attackDir);
 
             if (p1.isBlocking && fromFront) {
-                // Bloqueio bem-sucedido — knockback leve
                 p1.velocity.x = punch.knockback.x * 0.2f;
                 p1.velocity.y = punch.knockback.y * 0.2f;
             } else {
@@ -380,8 +393,7 @@ int main()
         {
             
             // TELA DE GAME OVER
-            if (IsKeyPressed(KEY_ENTER)) {
-                // Reinicia os Status
+            if (IsKeyPressed(KEY_SPACE)) {
                 p1.hp = p1.maxHp; p1.position = (Vector2){400.0f, 300.0f};
                 p1.state = STATE_SPRITE; p1.isHit = false; p1.isDead = false;
                 p2.hp = p2.maxHp; p2.position = (Vector2){200.0f, 300.0f};
@@ -389,9 +401,17 @@ int main()
                 punch.active = false; bullet.active = false;
                 FreeDamageTexts(&damageList);
                 gameOver = false; winner = 0;
+
+                currentFase = 1;
+                bg = LoadTexture("assets/cenarios/Cenario1_2.0.png");
+                FreeEnemies(&enemies);
+                FreeEnemyBullets(&enemyBullets);
+                enemies      = NULL;
+                enemyBullets = NULL;
+                InitWaves(&ws, 2);
+                SpawnWave(&ws, &enemies,enemy1Sprite, enemy1Atk, enemy2Sprite, enemy2Atk, currentFase);
             }
         }
-
         // RENDER E DESENHO
         
         BeginDrawing();
@@ -423,7 +443,7 @@ int main()
         if (gameOver) {
             DrawRectangle(0, 0, 800, 600, Fade(BLACK, 0.7f));
             DrawText("GAME OVER", 280, 250, 40, RED);
-            DrawText("Pressione ENTER para jogar novamente", 200, 330, 20, LIGHTGRAY);
+            DrawText("Pressione SPACE para jogar novamente", 200, 330, 20, LIGHTGRAY);
         }
 
         EndDrawing();
@@ -434,7 +454,8 @@ int main()
     FreeDamageTexts(&damageList);
     FreeEnemies(&enemies);
     FreeEnemyBullets(&enemyBullets);
-    FreeSaves(&historyList); 
+    FreeSaves(&historyList);
+    FreeCutscene(&cutscene);
     
     CloseWindow();
     return 0;

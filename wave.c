@@ -3,22 +3,20 @@
 
 void InitWaves(WaveSystem *ws, int totalWaves)
 {
-    ws->currentWave     = 0;
-    ws->totalWaves      = totalWaves;
-    ws->waveCleared     = true;
+    ws->currentWave = 0;
+    ws->totalWaves = totalWaves;
+    ws->waveCleared = true;
     ws->transitionTimer = 0;
 }
 
-// Posições de spawn por wave e fase(com matriz)
 static Vector2 spawnPosFase1[2][4] = {
-    // Wave 1
     {{700,300},{650,350},{720,280},{680,320}},
-    // Wave 2
+
     {{750,300},{700,280},{760,340},{730,310}},
 };
 
 static Vector2 spawnPosFase2[1][6] = {
-    // Wave 1: 3 melee + 3 ranged
+    // Wave 1
     {{700,300},{650,350},{720,280},{680,320},{760,340},{730,310}},
 };
 
@@ -33,35 +31,30 @@ void SpawnWave(WaveSystem *ws, Enemy **enemies,
     {
         int w = ws->currentWave;
         if (w == 0) {
-            // Wave 1: 4 melee
+            // Wave 1
             for (int i = 0; i < 4; i++) {
-                Enemy *e = CreateEnemy(spawnPosFase1[0][i],
-                                       ENEMY_MELEE, meleeSprite, meleeAtk);
+                Enemy *e = CreateEnemy(spawnPosFase1[0][i],ENEMY_MELEE, meleeSprite, meleeAtk);
                 e->next  = *enemies;
                 *enemies = e;
             }
         } else {
-            // Wave 2: 4 ranged
+            // Wave 2
             for (int i = 0; i < 4; i++) {
-                Enemy *e = CreateEnemy(spawnPosFase1[1][i],
-                                       ENEMY_RANGED, rangedSprite, rangedAtk);
+                Enemy *e = CreateEnemy(spawnPosFase1[1][i],ENEMY_RANGED, rangedSprite, rangedAtk);
                 e->next  = *enemies;
                 *enemies = e;
             }
         }
     }
-    else // fase == 2
+    else 
     {
-        // Wave única: 3 melee + 3 ranged
         for (int i = 0; i < 3; i++) {
-            Enemy *e = CreateEnemy(spawnPosFase2[0][i],
-                                   ENEMY_MELEE, meleeSprite, meleeAtk);
+            Enemy *e = CreateEnemy(spawnPosFase2[0][i], ENEMY_MELEE, meleeSprite, meleeAtk);
             e->next  = *enemies;
             *enemies = e;
         }
         for (int i = 3; i < 6; i++) {
-            Enemy *e = CreateEnemy(spawnPosFase2[0][i],
-                                   ENEMY_RANGED, rangedSprite, rangedAtk);
+            Enemy *e = CreateEnemy(spawnPosFase2[0][i],  ENEMY_RANGED, rangedSprite, rangedAtk);
             e->next  = *enemies;
             *enemies = e;
         }
@@ -70,11 +63,8 @@ void SpawnWave(WaveSystem *ws, Enemy **enemies,
     ws->waveCleared = false;
 }
 
-void UpdateWaves(WaveSystem *ws, Enemy **enemies,
-                 EnemyBullet **bullets,
-                 Texture2D meleeSprite, Texture2D meleeAtk,
-                 Texture2D rangedSprite, Texture2D rangedAtk,
-                 int fase)
+void UpdateWaves(WaveSystem *ws,Enemy **enemies,EnemyBullet **bullets,Texture2D meleeSprite, 
+Texture2D meleeAtk,Texture2D rangedSprite,Texture2D rangedAtk, int fase, Player *p1, Player *p2)
 {
     if (ws->waveCleared)
     {
@@ -86,15 +76,23 @@ void UpdateWaves(WaveSystem *ws, Enemy **enemies,
             ws->currentWave++;
 
             if (ws->currentWave < ws->totalWaves) {
-                SpawnWave(ws, enemies,
-                          meleeSprite, meleeAtk,
-                          rangedSprite, rangedAtk, fase);
+                SpawnWave(ws, enemies,meleeSprite,meleeAtk,rangedSprite,rangedAtk,fase);
+                if (p1->isDead) {
+                    p1->isDead = false;
+                    p1->hp     = p1->maxHp / 2;
+                    p1->state  = STATE_SPRITE;
+                }
+                if (p2->isDead) {
+                    p2->isDead = false;
+                    p2->hp     = p2->maxHp / 2;
+                    p2->state  = STATE_SPRITE;
+                }
             }
         }
         return;
     }
 
-    // Checa se a wave foi limpa
+    // Checa se a wave tw limpa
     if (CountActiveEnemies(*enemies) == 0)
         ws->waveCleared = true;
 }

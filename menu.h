@@ -15,7 +15,8 @@ typedef enum {
 
 typedef enum {
     SCREEN_MENU,
-    SCREEN_GAME
+    SCREEN_GAME,
+    SCREEN_CUTSCENE
 } GameScreen;
 
 typedef struct {

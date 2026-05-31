@@ -52,21 +52,19 @@ GameScreen UpdateMenu(Menu *m)
     if (IsKeyPressed(KEY_UP))
         m->currentItem = (m->currentItem - 1 + MENU_COUNT) % MENU_COUNT;
 
-    if (IsKeyPressed(KEY_ENTER))
+    if (IsKeyPressed(KEY_SPACE))
     {
         switch (m->currentItem)
         {
             case MENU_PLAY:
-                return SCREEN_GAME;
+                return SCREEN_CUTSCENE;
 
             case MENU_NEWGAME:
                 DeleteSave();
-                // scores são resetados no main ao chamar essa opção
                 return SCREEN_MENU;
 
             case MENU_SAVES:
             case MENU_SCORES:
-                // exibidos no DrawMenu, sem troca de tela
                 return SCREEN_MENU;
 
             case MENU_QUIT:
@@ -86,7 +84,6 @@ void DrawMenu(Menu m, int topScore, const char *topName, int savedFase)
         (Rectangle){0, 0, GetScreenWidth(), GetScreenHeight()},
         (Vector2){0, 0}, 0, WHITE);
 
-    // Título
     DrawText("BUBBLE-GUMZ", 240, 80, 48, YELLOW);
 
     // Itens do menu
@@ -98,7 +95,6 @@ void DrawMenu(Menu m, int topScore, const char *topName, int savedFase)
         DrawText(menuLabels[i], 340, startY + i * 55, tam, cor);
     }
 
-    // Painel de SAVES
     if (m.currentItem == MENU_SAVES)
     {
         DrawRectangle(520, 200, 220, 80, Fade(BLACK, 0.7f));
@@ -108,7 +104,6 @@ void DrawMenu(Menu m, int topScore, const char *topName, int savedFase)
             DrawText("Sem save", 535, 225, 20, GRAY);
     }
 
-    // Painel de SCORES
     if (m.currentItem == MENU_SCORES)
     {
         DrawRectangle(520, 200, 220, 80, Fade(BLACK, 0.7f));
@@ -116,6 +111,5 @@ void DrawMenu(Menu m, int topScore, const char *topName, int savedFase)
         DrawText(TextFormat("%s  %d pts", topName, topScore), 535, 235, 18, YELLOW);
     }
 
-    // Instrução
-    DrawText("SETAS + ENTER", 310, 530, 18, GRAY);
+    DrawText("SETAS + SPACE", 310, 530, 18, GRAY);
 }
