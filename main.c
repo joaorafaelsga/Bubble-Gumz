@@ -100,7 +100,7 @@ int main()
     GameScreen currentScreen = SCREEN_MENU;
     int currentFase = 1;
     
-    // Configuração do Gumz (P1)
+    // Configuração Gumz
     Player p1 = {0}; 
     p1.position = (Vector2){ 400.0f, 300.0f }; 
     p1.direction = 1; 
@@ -111,9 +111,12 @@ int main()
     p1.sprite = (Animation){ sprite1, 1, 10, 10 };     
     p1.walkSprite = (Animation){ p1_walk, 1, 3, 3 };  
     p1.attackSprite = (Animation){ p1_attack, 1, 2, 2 };
-    p1.blockSprite = (Animation){ p1_block, 1, 7, 7 };
+    p1.isDashing    = false;
+    p1.dashTimer    = 0;
+    p1.dashCooldown = 0;
+    p1.dashSpeed    = 500.0f;
 
-    // Configuração do Bubbles (P2)
+    // Configuração Bubbles
     Player p2 = {0};
     p2.position = (Vector2){ 200.0f, 300.0f }; 
     p2.direction = 1; 

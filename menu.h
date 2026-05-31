@@ -25,7 +25,7 @@ typedef struct {
 
 // Save
 void SaveGame(int fase);
-int  LoadGame();      // retorna -1 se não existir
+int  LoadGame(); 
 void DeleteSave();
 
 void InitMenu(Menu *m, Texture2D bg);

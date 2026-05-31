@@ -41,7 +41,12 @@ typedef struct Player {
 
     bool isBlocking;
     bool isDead;
-    
+
+    bool  isDashing;
+    float dashTimer;
+    float dashCooldown;
+    float dashSpeed;
+
 } Player;
 
 typedef enum {

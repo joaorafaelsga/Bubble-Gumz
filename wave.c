@@ -11,9 +11,9 @@ void InitWaves(WaveSystem *ws, int totalWaves)
 
 // Posições de spawn por wave e fase(com matriz)
 static Vector2 spawnPosFase1[2][4] = {
-    // Wave 1: 4 melee
+    // Wave 1
     {{700,300},{650,350},{720,280},{680,320}},
-    // Wave 2: 4 ranged
+    // Wave 2
     {{750,300},{700,280},{760,340},{730,310}},
 };
 

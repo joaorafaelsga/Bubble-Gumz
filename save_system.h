@@ -11,10 +11,9 @@ typedef struct GameSave {
     int p2_hp;
     Vector2 p1_pos;
     Vector2 p2_pos;
-    struct GameSave *next; // Ponteiro para o próximo nó
+    struct GameSave *next; // ponteiro 
 } GameSave;
 
-//Armazena as strings nomes de até 10 saves recentes
 extern char saveNames[10][30];
 
 // Funções do sistema

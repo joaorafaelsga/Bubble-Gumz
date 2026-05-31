@@ -8,13 +8,18 @@ void UpdatePlayer(Player *p, float speed, Rectangle *walls, int wallCount, float
     bool moving = false;
 
     if (p->controls == 0) {
-        p->isBlocking = (IsKeyDown(KEY_Q) && p->state != STATE_ATTACK);
+        p->isBlocking = false;
 
         if (!p->isBlocking) { 
             if (IsKeyDown(KEY_D)) { next.x += speed; p->direction =  1; moving = true; }
             if (IsKeyDown(KEY_A)) { next.x -= speed; p->direction = -1; moving = true; }
             if (IsKeyDown(KEY_W)) { next.y -= speed; moving = true; }
             if (IsKeyDown(KEY_S)) { next.y += speed; moving = true; }
+        }
+        if (IsKeyPressed(KEY_Q) && p->dashCooldown <= 0 && !p->isDashing) {
+            p->isDashing   = true;
+            p->dashTimer   = 0.30f;  // duração dash
+            p->dashSpeed   = 500.0f; // velocidade dash
         }
 
         if (IsKeyPressed(KEY_R) && p->state != STATE_ATTACK && !p->isBlocking) {
@@ -85,8 +90,20 @@ void UpdatePlayer(Player *p, float speed, Rectangle *walls, int wallCount, float
             p->frame = 0;
         }
     }
+    if (p->isDashing)
+    {
+        p->isHit = false;
+        p->dashTimer -= GetFrameTime();
 
+        next.x += p->direction * p->dashSpeed * GetFrameTime();
 
+        if (p->dashTimer <= 0)
+        {
+            p->isDashing   = false;
+            p->dashCooldown = 0.8f; // cooldown dash
+        }
+    }
+    if (p->dashCooldown > 0) p->dashCooldown -= GetFrameTime();
 
     Rectangle rectX = { next.x, p->position.y, frameW, frameH };
     Rectangle rectY = { p->position.x, next.y, frameW, frameH };
