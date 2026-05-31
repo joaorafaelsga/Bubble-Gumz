@@ -18,16 +18,20 @@ Enemy *CreateEnemy(Vector2 pos, EnemyType type, Texture2D sprite, Texture2D atta
     e->position      = pos;
     e->direction     = -1; 
     
-    // Status
     if (type == ENEMY_BOSS) {
         e->hp = 400;
         e->wheel1Hp = 10; 
         e->wheel2Hp = 10; 
         e->isVulnerable = false;
         e->attackCooldown = 0.2f; 
+        e->sprite       = (Animation){ sprite,       1, 1 }; 
+        e->attackSprite = (Animation){ attackSprite, 1, 1 }; 
     } else {
         e->hp = (type == ENEMY_MELEE) ? 60 : 40;
         e->attackCooldown = (type == ENEMY_MELEE) ? 1.0f : 2.0f;
+        int atkRows = (type == ENEMY_RANGED) ? 3 : 7;
+        e->sprite       = (Animation){ sprite,       1, 7 };
+        e->attackSprite = (Animation){ attackSprite, 1, atkRows };
     }
     
     e->maxHp         = e->hp;
@@ -39,10 +43,6 @@ Enemy *CreateEnemy(Vector2 pos, EnemyType type, Texture2D sprite, Texture2D atta
     e->animTime      = 0;
     e->active        = true;
     e->next          = NULL;
-
-    int atkRows = (type == ENEMY_RANGED) ? 3 : 7;
-    e->sprite       = (Animation){ sprite,       1, 7 };
-    e->attackSprite = (Animation){ attackSprite, 1, atkRows };
 
     return e;
 }
@@ -64,33 +64,30 @@ static void ApplyEnemyHit(Player *target, Vector2 knockback, int damage) {
 void UpdateEnemies(Enemy *head, Player *p1, Player *p2, EnemyBullet **bullets, Rectangle *walls, int wallCount)
 {
     int idx = 0;
-
     for (Enemy *e = head; e != NULL; e = e->next, idx++)
     {
         if (!e->active || e->state == ENEMY_STATE_DEAD) continue;
-
         if (e->hp <= 0) { e->state = ENEMY_STATE_DEAD; e->active = false; continue; }
 
-        // LÓGICA DO BOSS (TRATOR GIGANTE)
        
+        // LÓGICA DO BOSS 
+        
         if (e->type == ENEMY_BOSS) 
         {
-            // Atualiza as Hitboxes do Trator
+            // Posições das Hitboxes no cenário
             e->wheel1Rect = (Rectangle){ e->position.x - 40, e->position.y - 100, 80, 120 }; 
             e->wheel2Rect = (Rectangle){ e->position.x - 40, e->position.y + 80, 80, 120 };  
             e->bodyRect   = (Rectangle){ e->position.x + 40, e->position.y - 120, 220, 340 };
 
-            // Verifica se o Gumz colou as duas rodas!
             if (e->wheel1Hp <= 0 && e->wheel2Hp <= 0) {
                 e->isVulnerable = true;
             }
 
-            // Se não estiver colado, o Trator anda lentamente para a frente a esmagar tudo
+            // O Trator avança e esmaga os jogadores!
             if (!e->isVulnerable) {
                 e->position.x -= 20.0f * GetFrameTime();
             }
 
-            // Dano de Encosto: Se tocar no trator em movimento, leva dano e é atirado longe!
             e->attackTimer += GetFrameTime();
             if (e->attackTimer >= e->attackCooldown) {
                 if (!p1->isDead && (CheckCollisionRecs(GetPlayerRect(p1), e->wheel1Rect) || CheckCollisionRecs(GetPlayerRect(p1), e->wheel2Rect) || CheckCollisionRecs(GetPlayerRect(p1), e->bodyRect))) {
@@ -102,22 +99,12 @@ void UpdateEnemies(Enemy *head, Player *p1, Player *p2, EnemyBullet **bullets, R
                     e->attackTimer = 0;
                 }
             }
-
-            // O Boss também faz a animação da imagem dele rodar enquanto avança
-            if (!e->isVulnerable) {
-                e->animTime += GetFrameTime();
-                int totalFrames = e->sprite.cols * e->sprite.rows;
-                if (e->animTime >= 0.12f) {
-                    e->animTime = 0; e->frame = (e->frame + 1) % totalFrames;
-                }
-            }
-
-            continue; // Salta a lógica do inimigo normal
+            continue; 
         }
 
-    
+        
         // LÓGICA DE INIMIGOS NORMAIS
-       
+        
         Player *target = (idx % 2 == 0) ? p1 : p2;
         if (target->hp <= 0) target = (target == p1) ? p2 : p1;
 
@@ -199,44 +186,38 @@ void DrawEnemies(Enemy *head)
 
         if (e->type == ENEMY_BOSS) 
         {
-            // DESENHO DO TRATOR BOSS
-            
-            // 1. Corpo Central: Imagem do inimigo esticada!
-            Animation *anim = (e->state == ENEMY_STATE_ATTACK) ? &e->attackSprite : &e->sprite;
-            int fw = anim->texture.width  / anim->cols;
-            int fh = anim->texture.height / anim->rows;
-            int row = e->frame / anim->cols;
-            int col = e->frame % anim->cols;
-            
-            Rectangle source = { col * fw, row * fh, fw, fh };
-            if (e->direction == 1) { source.x += fw; source.width = -fw; }
-            
-            // Desenha a imagem do inimigo mapeada para o tamanho massivo do "bodyRect" pintada de vermelho
-            DrawTexturePro(anim->texture, source, e->bodyRect, (Vector2){0,0}, 0, RED);
+            // 1. DESENHO DO CORPO DO TRATOR (Usa BOSSBody.png)
+            DrawTexturePro(e->sprite.texture, 
+                           (Rectangle){ 0, 0, e->sprite.texture.width, e->sprite.texture.height }, 
+                           e->bodyRect, (Vector2){0,0}, 0, WHITE);
 
             // 2. Braço do Trator na frente
             if (e->isVulnerable) {
-                // Braço Levantado (Bubbles pode bater no corpo!)
                 DrawRectangle(e->position.x + 40, e->position.y - 200, 40, 100, DARKGRAY);
-                DrawRectangle(e->position.x + 20, e->position.y - 240, 80, 40, GRAY); // Pá no ar
+                DrawRectangle(e->position.x + 20, e->position.y - 240, 80, 40, GRAY); 
                 DrawText("PUNCH AQUI!", e->bodyRect.x + 10, e->bodyRect.y + 160, 20, YELLOW);
             } else {
-                // Braço Baixado Protegendo a Frente (Impede dano)
                 DrawRectangle(e->position.x - 80, e->position.y + 20, 120, 40, DARKGRAY);
-                DrawRectangle(e->position.x - 100, e->position.y - 20, 40, 120, GRAY); // Pá no chão
+                DrawRectangle(e->position.x - 100, e->position.y - 20, 40, 120, GRAY); 
             }
 
-            // 3. Rodas Gigantes
-            Color wheel1Color = (e->wheel1Hp <= 0) ? MAGENTA : BLACK;
-            Color wheel2Color = (e->wheel2Hp <= 0) ? MAGENTA : BLACK;
-            DrawRectangleRec(e->wheel1Rect, wheel1Color);
-            DrawRectangleRec(e->wheel2Rect, wheel2Color);
+            // 3. DESENHO DAS RODAS GIGANTES (Usa BOSSTire.png)
+            Color wheel1Color = (e->wheel1Hp <= 0) ? MAGENTA : WHITE;
+            Color wheel2Color = (e->wheel2Hp <= 0) ? MAGENTA : WHITE;
 
-            // Interface de Tiros Restantes dentro de cada roda
-            if (e->wheel1Hp > 0) DrawText(TextFormat("%d", e->wheel1Hp), e->wheel1Rect.x + 30, e->wheel1Rect.y + 50, 20, WHITE);
-            if (e->wheel2Hp > 0) DrawText(TextFormat("%d", e->wheel2Hp), e->wheel2Rect.x + 30, e->wheel2Rect.y + 50, 20, WHITE);
+            DrawTexturePro(e->attackSprite.texture, 
+                           (Rectangle){ 0, 0, e->attackSprite.texture.width, e->attackSprite.texture.height }, 
+                           e->wheel1Rect, (Vector2){0,0}, 0, wheel1Color);
+                           
+            DrawTexturePro(e->attackSprite.texture, 
+                           (Rectangle){ 0, 0, e->attackSprite.texture.width, e->attackSprite.texture.height }, 
+                           e->wheel2Rect, (Vector2){0,0}, 0, wheel2Color);
+
+            // Interface de Tiros Restantes dentro das Rodas
+            if (e->wheel1Hp > 0) DrawText(TextFormat("%d", e->wheel1Hp), e->wheel1Rect.x + 30, e->wheel1Rect.y + 50, 20, BLACK);
+            if (e->wheel2Hp > 0) DrawText(TextFormat("%d", e->wheel2Hp), e->wheel2Rect.x + 30, e->wheel2Rect.y + 50, 20, BLACK);
             
-            continue; // Já desenhamos o boss, passa para o próximo
+            continue; 
         }
 
         // DESENHO DOS INIMIGOS NORMAIS
@@ -250,7 +231,6 @@ void DrawEnemies(Enemy *head)
 
         DrawTexturePro(anim->texture, source, dest, (Vector2){0,0}, 0, WHITE);
 
-        // Barra de HP Inimigo Normal
         float pct = (float)e->hp / e->maxHp;
         DrawRectangle(e->position.x, e->position.y - 10, fw, 5, GRAY);
         DrawRectangle(e->position.x, e->position.y - 10, (int)(fw * pct), 5, RED);

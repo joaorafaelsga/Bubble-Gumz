@@ -8,7 +8,7 @@
 typedef enum {
     ENEMY_MELEE,
     ENEMY_RANGED,
-    ENEMY_BOSS // O nosso Trator Boss
+    ENEMY_BOSS 
 } EnemyType;
 
 typedef enum {
@@ -40,14 +40,13 @@ typedef struct Enemy {
     bool    isHit; 
     float   hitTimer;
 
-    //VARIÁVEIS EXCLUSIVAS DO BOSS (TRATOR)
-    int wheel1Hp;       // HP da Roda Superior (Tiros de Chiclete)
-    int wheel2Hp;       // HP da Roda Inferior
+    // VARIÁVEIS EXCLUSIVAS DO BOSS (TRATOR)
+    int wheel1Hp;       // Tiros necessários para grudar a Roda 1
+    int wheel2Hp;       // Tiros necessários para grudar a Roda 2
     bool isVulnerable;  // Fica true quando as rodas param
     Rectangle wheel1Rect;
     Rectangle wheel2Rect;
     Rectangle bodyRect;
-   
 
     Animation sprite;
     Animation attackSprite;

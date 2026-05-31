@@ -15,8 +15,8 @@ static Vector2 spawnPosFase1[2][4] = {
 };
 
 static Vector2 spawnPosFase2[2][6] = {
-    {{700,300},{650,350},{720,280},{680,320},{760,340},{730,310}}, 
-    {{700,320},{0,0},{0,0},{0,0},{0,0},{0,0}}                      
+    {{700,300},{650,350},{720,280},{680,320},{760,340},{730,310}}, // Wave 1 da Fase 2
+    {{700,320},{0,0},{0,0},{0,0},{0,0},{0,0}}                      // Wave 2 da Fase 2 (Boss)
 };
 
 void SpawnWave(WaveSystem *ws, Enemy **enemies,
@@ -59,7 +59,7 @@ void SpawnWave(WaveSystem *ws, Enemy **enemies,
                 *enemies = e;
             }
         } else {
-            // Wave 2: BATALHA CONTRA O BOSS TRATOR!
+            // BATALHA CONTRA O BOSS TRATOR!
             Enemy *boss = CreateEnemy(spawnPosFase2[1][0], ENEMY_BOSS, bossSprite, bossAtk);
             boss->next = *enemies;
             *enemies = boss;

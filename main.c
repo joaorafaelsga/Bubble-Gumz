@@ -70,8 +70,10 @@ int main()
     Texture2D enemy1Atk    = LoadTexture("assets/Enemies/Enemy1.png");
     Texture2D enemy2Sprite = LoadTexture("assets/Enemies/Enemy2.png");
     Texture2D enemy2Atk    = LoadTexture("assets/Enemies/Enemy2Atk.png");
-    Texture2D bossSprite   = enemy1Sprite; 
-    Texture2D bossAtk      = enemy1Atk;
+    
+    // CARREGA AS IMAGENS REAIS DO BOSS DO SEU REPOSITÓRIO
+    Texture2D bossSprite   = LoadTexture("assets/Enemies/BOSSBody.png"); 
+    Texture2D bossAtk      = LoadTexture("assets/Enemies/BOSSTire.png");
 
     SetTextureFilter(sprite1, TEXTURE_FILTER_POINT);
     SetTextureFilter(sprite2, TEXTURE_FILTER_POINT);
@@ -172,6 +174,7 @@ int main()
             continue;
         }
         
+        // SAVE SYSTEM 
         if (IsKeyPressed(KEY_ONE)) { 
             AddSaveState(&historyList, p1, p2); SaveToFile(historyList); SaveGame(currentFase);         
             FILE *sf = fopen("score_save.txt", "w"); if(sf) { fprintf(sf, "%d", currentScore); fclose(sf); }
@@ -251,7 +254,7 @@ int main()
                             AddDamageText(&damageList, punch.damage, (Vector2){ e->bodyRect.x + 20, e->bodyRect.y + 100 });
                             punch.active = false; break;
                         } else if (CheckCollisionRecs(punch.rect, e->wheel1Rect) || CheckCollisionRecs(punch.rect, e->wheel2Rect) || CheckCollisionRecs(punch.rect, e->bodyRect)) {
-                            AddDamageText(&damageList, 0, (Vector2){ punch.rect.x, punch.rect.y }); // Bloqueado!
+                            AddDamageText(&damageList, 0, (Vector2){ punch.rect.x, punch.rect.y }); 
                             punch.active = false; break;
                         }
                     } else {
@@ -281,7 +284,7 @@ int main()
                             e->wheel2Hp--; hitSomething = true;
                             AddDamageText(&damageList, 1, (Vector2){ e->wheel2Rect.x + 40, e->wheel2Rect.y });
                         } else if (CheckCollisionRecs(bullet.rect, e->bodyRect) || CheckCollisionRecs(bullet.rect, e->wheel1Rect) || CheckCollisionRecs(bullet.rect, e->wheel2Rect)) {
-                            AddDamageText(&damageList, 0, (Vector2){ bullet.rect.x, bullet.rect.y }); // Dano bloqueado
+                            AddDamageText(&damageList, 0, (Vector2){ bullet.rect.x, bullet.rect.y }); 
                             hitSomething = true;
                         }
 
@@ -301,26 +304,25 @@ int main()
             UpdatePlayer(&p1, speed, walls, 4, animSpeed); UpdatePlayer(&p2, speed, walls, 4, animSpeed);
             UpdateHitbox(&punch); UpdateProjectile(&bullet);
 
+            // DETEÇÃO DE MORTE
             if (p1.hp <= 0 && !p1.isDead) { p1.isDead = true; p1.hp = 0; p1.state = STATE_DEAD; p1.velocity = (Vector2){0, 0}; p1.isHit = false; }
             if (p2.hp <= 0 && !p2.isDead) { p2.isDead = true; p2.hp = 0; p2.state = STATE_DEAD; p2.velocity = (Vector2){0, 0}; p2.isHit = false; }
             
             // GAMEOVER SE OS DOIS MORREREM
             if (p1.isDead && p2.isDead) { 
                 gameOver = true; winner = 0; SaveScores(); 
-                
-                // Limpar ficheiros de save
                 DeleteSave(); FILE *fClear = fopen("savegame.txt", "w"); if (fClear) fclose(fClear); FreeSaves(&historyList);
                 FILE *sf = fopen("score_save.txt", "w"); if (sf) { fprintf(sf, "0"); fclose(sf); }
             }
         }
         else 
         {
-            // BOTÃO PARA CONTINUAR APÓS MORRER / GANHAR
+            
+            // ECRÃ DE GAMEOVER / VITÓRIA -> RECOMEÇAR JOGO OU MENU
+        
             if (IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ENTER)) {
+                int priorWinner = winner; // Guardamos se foi Game Over(0) ou Vitória(3)
                 
-                int priorWinner = winner; // Guarda se ganhamos ou morremos
-
-                // Reset das variáveis base
                 p1.hp = p1.maxHp; p1.position = (Vector2){400.0f, 300.0f}; p1.state = STATE_SPRITE; p1.isHit = false; p1.isDead = false;
                 p2.hp = p2.maxHp; p2.position = (Vector2){200.0f, 300.0f}; p2.state = STATE_SPRITE; p2.isHit = false; p2.isDead = false;
                 punch.active = false; bullet.active = false; FreeDamageTexts(&damageList); gameOver = false; winner = 0;
@@ -334,7 +336,7 @@ int main()
                 FreeEnemies(&enemies); FreeEnemyBullets(&enemyBullets); enemies = NULL; enemyBullets = NULL;
                 InitWaves(&ws, 2); SpawnWave(&ws, &enemies,enemy1Sprite, enemy1Atk, enemy2Sprite, enemy2Atk, bossSprite, bossAtk, currentFase);
 
-                // SE FOI GAME OVER (MORREU), VAI DIRETO PARA O JOGO. SE GANHOU, VAI PARA O MENU!
+                // SE FOI VITÓRIA: VOLTA AO MENU. SE MORREU: RECOMEÇA NA FASE 1 DIRETO.
                 if (priorWinner == 3) {
                     currentScreen = SCREEN_MENU;
                 } else {
@@ -343,7 +345,7 @@ int main()
             }
         }
         
-        // RENDERIZAÇÃO
+        // RENDERIZAÇÃO 
         BeginDrawing(); ClearBackground(RAYWHITE);
         DrawTexturePro(bg, (Rectangle){0,0,bg.width,bg.height}, (Rectangle){0,0,GetScreenWidth(),GetScreenHeight()}, (Vector2){0,0},0,WHITE);
 
@@ -382,8 +384,7 @@ int main()
                 DrawText("Pressione SPACE para voltar ao Menu", 200, 350, 20, LIGHTGRAY);
             } else {
                 DrawText("GAME OVER", 280, 250, 40, RED);
-                // MUDANÇA NO TEXTO AO MORRER
-                DrawText("Pressione SPACE para tentar novamente", 200, 350, 20, LIGHTGRAY);
+                DrawText("Pressione SPACE para jogar novamente", 200, 350, 20, LIGHTGRAY);
             }
         }
 
