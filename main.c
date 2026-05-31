@@ -102,7 +102,7 @@ int main()
         float speed = moveSpeed * GetFrameTime();
         if(IsKeyPressed(KEY_F11)) ToggleFullscreen();
         
-        // ================== MENU ==================
+        // MENU 
         if (currentScreen == SCREEN_MENU)
         {
             int savedFase = LoadGame();
@@ -142,8 +142,6 @@ int main()
                 if (menu.currentItem == MENU_NEWGAME) 
                 {
                     DeleteSave(); FILE *fClear = fopen("savegame.txt", "w"); if (fClear) fclose(fClear); FreeSaves(&historyList);
-                    
-                    // ESCREVE FORÇADAMENTE UM ZERO NO SCORE DO FICHEIRO PARA EVITAR BUGS!
                     FILE *sf = fopen("score_save.txt", "w"); if (sf) { fprintf(sf, "0"); fclose(sf); }
                     
                     currentFase = 1; currentScore = 0;
@@ -174,7 +172,6 @@ int main()
             continue;
         }
         
-        // ================== SAVE SYSTEM ==================
         if (IsKeyPressed(KEY_ONE)) { 
             AddSaveState(&historyList, p1, p2); SaveToFile(historyList); SaveGame(currentFase);         
             FILE *sf = fopen("score_save.txt", "w"); if(sf) { fprintf(sf, "%d", currentScore); fclose(sf); }
@@ -203,7 +200,7 @@ int main()
 
         if (currentScore > topScores[0]) { topScores[0] = currentScore; strcpy(topNames[0], "P1"); }
 
-        // ================== UPDATES DA ENGINE ==================
+        // UPDATES DA ENGINE 
         UpdateEnemies(enemies, &p1, &p2, &enemyBullets, walls, 4);
         UpdateEnemyBullets(&enemyBullets, &p1, &p2);
         UpdateWaves(&ws, &enemies, &enemyBullets, enemy1Sprite, enemy1Atk, enemy2Sprite, enemy2Atk, bossSprite, bossAtk, currentFase, &p1, &p2);
@@ -217,8 +214,6 @@ int main()
                 if (p2.isDead) { p2.isDead = false; p2.hp = p2.maxHp / 2; p2.state = STATE_SPRITE; }
             } else if (currentFase == 2 && !gameOver) {
                 gameOver = true; winner = 3; SaveScores(); 
-                
-                // APAGA O SAVE AO ZERAR O JOGO
                 DeleteSave(); FILE *fClear = fopen("savegame.txt", "w"); if (fClear) fclose(fClear); FreeSaves(&historyList);
                 FILE *sf = fopen("score_save.txt", "w"); if (sf) { fprintf(sf, "0"); fclose(sf); }
             }
@@ -226,7 +221,7 @@ int main()
         
         if (showSaveMessage) { messageTimer -= GetFrameTime(); if (messageTimer <= 0) showSaveMessage = false; }
         
-        // ================== LÓGICA DE COMBATE ==================
+        // LÓGICA DE COMBATE 
         if (!gameOver) 
         {
             if (!p2.isDead && IsKeyPressed(KEY_K) && p2.state != STATE_ATTACK) {
@@ -306,31 +301,32 @@ int main()
             UpdatePlayer(&p1, speed, walls, 4, animSpeed); UpdatePlayer(&p2, speed, walls, 4, animSpeed);
             UpdateHitbox(&punch); UpdateProjectile(&bullet);
 
-            // DETEÇÃO DE MORTE
             if (p1.hp <= 0 && !p1.isDead) { p1.isDead = true; p1.hp = 0; p1.state = STATE_DEAD; p1.velocity = (Vector2){0, 0}; p1.isHit = false; }
             if (p2.hp <= 0 && !p2.isDead) { p2.isDead = true; p2.hp = 0; p2.state = STATE_DEAD; p2.velocity = (Vector2){0, 0}; p2.isHit = false; }
             
-            // SE OS DOIS MORREREM
+            // GAMEOVER SE OS DOIS MORREREM
             if (p1.isDead && p2.isDead) { 
                 gameOver = true; winner = 0; SaveScores(); 
                 
-                // APAGA O SAVE IMEDIATAMENTE (Escreve zeros nos ficheiros!)
-                DeleteSave(); 
-                FILE *fClear = fopen("savegame.txt", "w"); if (fClear) fclose(fClear); FreeSaves(&historyList);
+                // Limpar ficheiros de save
+                DeleteSave(); FILE *fClear = fopen("savegame.txt", "w"); if (fClear) fclose(fClear); FreeSaves(&historyList);
                 FILE *sf = fopen("score_save.txt", "w"); if (sf) { fprintf(sf, "0"); fclose(sf); }
             }
         }
         else 
         {
-            // RECOMEÇAR DEPOIS DO ECRÃ DE GAME OVER / VITÓRIA
+            // BOTÃO PARA CONTINUAR APÓS MORRER / GANHAR
             if (IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ENTER)) {
+                
+                int priorWinner = winner; // Guarda se ganhamos ou morremos
+
+                // Reset das variáveis base
                 p1.hp = p1.maxHp; p1.position = (Vector2){400.0f, 300.0f}; p1.state = STATE_SPRITE; p1.isHit = false; p1.isDead = false;
                 p2.hp = p2.maxHp; p2.position = (Vector2){200.0f, 300.0f}; p2.state = STATE_SPRITE; p2.isHit = false; p2.isDead = false;
                 punch.active = false; bullet.active = false; FreeDamageTexts(&damageList); gameOver = false; winner = 0;
 
                 currentFase = 1; currentScore = 0;
                 
-                // GARANTE QUE TUDO ESTÁ LIMPO AO VOLTAR AO MENU
                 DeleteSave(); FILE *fClear = fopen("savegame.txt", "w"); if (fClear) fclose(fClear); FreeSaves(&historyList);
                 FILE *sf = fopen("score_save.txt", "w"); if (sf) { fprintf(sf, "0"); fclose(sf); }
 
@@ -338,11 +334,16 @@ int main()
                 FreeEnemies(&enemies); FreeEnemyBullets(&enemyBullets); enemies = NULL; enemyBullets = NULL;
                 InitWaves(&ws, 2); SpawnWave(&ws, &enemies,enemy1Sprite, enemy1Atk, enemy2Sprite, enemy2Atk, bossSprite, bossAtk, currentFase);
 
-                currentScreen = SCREEN_MENU;
+                // SE FOI GAME OVER (MORREU), VAI DIRETO PARA O JOGO. SE GANHOU, VAI PARA O MENU!
+                if (priorWinner == 3) {
+                    currentScreen = SCREEN_MENU;
+                } else {
+                    currentScreen = SCREEN_GAME; 
+                }
             }
         }
         
-        // ================== RENDERIZAÇÃO ==================
+        // RENDERIZAÇÃO
         BeginDrawing(); ClearBackground(RAYWHITE);
         DrawTexturePro(bg, (Rectangle){0,0,bg.width,bg.height}, (Rectangle){0,0,GetScreenWidth(),GetScreenHeight()}, (Vector2){0,0},0,WHITE);
 
@@ -378,10 +379,12 @@ int main()
             if (winner == 3) {
                 DrawText("VITÓRIA! O TRATOR FOI DESTRUÍDO!", 70, 220, 36, GOLD);
                 DrawText(TextFormat("SCORE FINAL: %d", currentScore), 280, 280, 24, WHITE);
+                DrawText("Pressione SPACE para voltar ao Menu", 200, 350, 20, LIGHTGRAY);
             } else {
                 DrawText("GAME OVER", 280, 250, 40, RED);
+                // MUDANÇA NO TEXTO AO MORRER
+                DrawText("Pressione SPACE para tentar novamente", 200, 350, 20, LIGHTGRAY);
             }
-            DrawText("Pressione SPACE para voltar ao Menu", 200, 350, 20, LIGHTGRAY);
         }
 
         EndDrawing();
