@@ -1,7 +1,9 @@
 #include "player.h"
 
 void UpdatePlayer(Player *p, float speed, Rectangle *walls, int wallCount, float animSpeed)
-{
+{   
+    if (p->isDead) return;
+
     Vector2 next = p->position;
     bool moving = false;
 
@@ -39,7 +41,7 @@ void UpdatePlayer(Player *p, float speed, Rectangle *walls, int wallCount, float
     }
 
     // ANIMAÇÃO 
-    if (p->state != STATE_ATTACK)
+    if (p->state != STATE_ATTACK && p->state != STATE_DEAD)
     {
         if (p->isBlocking)
             p->state = STATE_BLOCK;

@@ -39,6 +39,9 @@ Enemy *CreateEnemy(Vector2 pos, EnemyType type, Texture2D sprite, Texture2D atta
 // Retorna o player mais próximo
 static Player *GetNearestPlayer(Enemy *e, Player *p1, Player *p2)
 {
+     if (p1->isDead && p2->isDead) return p1;
+    if (p1->isDead) return p2;
+    if (p2->isDead) return p1;
     float d1 = fabsf(p1->position.x - e->position.x);
     float d2 = fabsf(p2->position.x - e->position.x);
     return (d1 < d2) ? p1 : p2;
@@ -278,7 +281,7 @@ void UpdateEnemyBullets(EnemyBullet **head, Player *p1, Player *p2)
 
         // Acerta player
         bool hit = false;
-        if (CheckCollisionRecs(cur->rect, GetPlayerRect(p1)))
+        if (!p1->isDead && CheckCollisionRecs(cur->rect, GetPlayerRect(p1)))
             { ApplyEnemyHit(p1, cur->velocity, BULLET_DAMAGE); hit = true; }
         else if (CheckCollisionRecs(cur->rect, GetPlayerRect(p2)))
             { ApplyEnemyHit(p2, cur->velocity, BULLET_DAMAGE); hit = true; }

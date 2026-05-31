@@ -35,6 +35,9 @@ typedef struct Enemy {
 
     float attackTimer;
     float attackCooldown;
+    Vector2 velocity;
+    bool    isHit; 
+    float   hitTimer;
 
     // Animação
     Animation sprite;

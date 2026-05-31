@@ -13,7 +13,7 @@
 #include "save_system.h" 
 
 
-// MATRIZES E FICHEIROS (Sistema de Scores)
+// MATRIZES DE SCORES
 #define MAX_SCORES 5
 char topNames[MAX_SCORES][20];
 int topScores[MAX_SCORES];
@@ -46,7 +46,6 @@ void SaveScores() {
     }
 }
 
-// Alterado para receber e aplicar o dano à variável HP
 void ApplyHit(Player *target, Vector2 knockback, int damage)
 {
     target->isHit = true;
@@ -169,36 +168,30 @@ int main()
                 }
                 SaveScores();
                 DeleteSave(); // Deleta save do menu original
-                
-                // Reseta também o arquivo do save_system e limpa a lista encadeada da RAM
+
                 FILE *fClear = fopen("savegame.txt", "w");
                 if (fClear) fclose(fClear);
                 FreeSaves(&historyList);
                 
                 currentFase = 0;
-                
-                // Coloca os dados dos personagens de volta ao início
+
                 p1.hp = p1.maxHp; p1.position = (Vector2){400.0f, 300.0f}; p1.isHit = false; p1.state = STATE_SPRITE;
                 p2.hp = p2.maxHp; p2.position = (Vector2){200.0f, 300.0f}; p2.isHit = false; p2.state = STATE_SPRITE;
                 gameOver = false;
             }
 
             int savedFase = LoadGame();
-            
-            // Transição de telas: guarda a tela antiga antes de atualizar
+
             GameScreen oldScreen = currentScreen;
             currentScreen = UpdateMenu(&menu);
 
-            // Se o ecrã acabou de mudar de MENU para JOGO (Play / Continue)
             if (oldScreen == SCREEN_MENU && currentScreen != SCREEN_MENU)
             {
-                // Se NÃO clicou em Novo Jogo, tentamos carregar automaticamente o progresso
                 if (menu.currentItem != MENU_NEWGAME)
                 {
                     FreeSaves(&historyList);            
-                    historyList = LoadFromFile(); // Recria a lista encadeada lendo o arquivo
+                    historyList = LoadFromFile();
                     
-                    // Se houver um save válido guardado no arquivo txt, aplica aos jogadores
                     if (LoadLatestSave(historyList, &p1, &p2)) {
                         gameOver = false; 
                     }
@@ -213,7 +206,7 @@ int main()
         }
 
         
-        // SISTEMA DE SAVE/LOAD E VOLTAR (DURANTE O JOGO)
+        // SISTEMA DE SAVE/LOAD
        
         if (IsKeyPressed(KEY_ONE)) { // Tecla 1 para salvar rápido na luta
             AddSaveState(&historyList, p1, p2); 
@@ -230,12 +223,6 @@ int main()
             messageTimer = 2.0f;
         }
 
-                UpdatePlayer(&p1, speed, walls, 4, animSpeed);
-        UpdatePlayer(&p2, speed, walls, 4, animSpeed);
-
-        UpdateHitbox(&punch);
-        UpdateProjectile(&bullet);
-
         UpdateEnemies(enemies, &p1, &p2, &enemyBullets, walls, 4);
         UpdateEnemyBullets(&enemyBullets, &p1, &p2);
         UpdateWaves(&ws, &enemies, &enemyBullets,
@@ -243,7 +230,8 @@ int main()
                     enemy2Sprite, enemy2Atk, currentFase);
 
         if (IsFaseComplete(ws) && currentFase == 1)
-        {
+        {   
+
             currentFase = 2;
             bg = LoadTexture("assets/cenarios/cenario2.png");
             FreeEnemyBullets(&enemyBullets);
@@ -252,6 +240,16 @@ int main()
                     enemy1Sprite, enemy1Atk,
                     enemy2Sprite, enemy2Atk, currentFase);
             SaveGame(currentFase);
+            if (p1.isDead) {
+                p1.isDead = false;
+                p1.hp = p1.maxHp / 2;
+                p1.state;
+            }  
+            if (p2.isDead) {
+                p2.isDead = false;
+                p2.hp = p2.maxHp / 2;
+                p2.state = STATE_SPRITE;
+            }
         }
         
 
@@ -272,7 +270,7 @@ int main()
             punch.active = false;
         }
 
-        if (IsKeyPressed(KEY_M)) { // Tecla M para sair para o Menu Principal
+        if (IsKeyPressed(KEY_M)) { //sair para o menu
             currentScreen = SCREEN_MENU;
         }
 
@@ -285,7 +283,7 @@ int main()
         if (!gameOver) 
         {
             // SOCO (P2)
-            if (IsKeyPressed(KEY_K) && p2.state != STATE_ATTACK) {
+            if (!p2.isDead && IsKeyPressed(KEY_K) && p2.state != STATE_ATTACK) {
                 p2.state = STATE_ATTACK; p2.stateTimer = 0; p2.frame = 0; p2.animTime = 0;
                 punch.active = true; punch.timer = 0; punch.duration = 0.15f; punch.damage = 15;
                 punch.knockback = (Vector2){ p2.direction * 300, -50 };
@@ -294,76 +292,104 @@ int main()
             }
 
             // PROJETIL (P1)
-            if (IsKeyPressed(KEY_R) && !bullet.active && p1.state != STATE_ATTACK) {
+            if (!p1.isDead && IsKeyPressed(KEY_R) && !bullet.active && p1.state != STATE_ATTACK) {
                 p1.state = STATE_ATTACK; p1.stateTimer = 0; p1.frame = 0; p1.animTime = 0;
                 bullet.active = true; bullet.timer = 0; bullet.lifetime = 1.0f; bullet.damage = 10;
                 bullet.velocity = (Vector2){ p1.direction * 400, 0 };
                 bullet.knockback = (Vector2){ p1.direction * 200, -30 };
                 bullet.rect = (Rectangle){ p1.position.x + (p1.direction == 1 ? 44 : -20), p1.position.y + 25, 20, 20 };
             }
+           
+            if (punch.active)
+            {
+                for (Enemy *e = enemies; e != NULL; e = e->next)
+                {
+                    if (!e->active) continue;
+                    Animation *anim = &e->sprite;
+                    int fw = anim->texture.width  / anim->cols;
+                    int fh = anim->texture.height / anim->rows;
+                    Rectangle er = { e->position.x, e->position.y, fw, fh };
 
-            // Atualiza físicas
+                    if (CheckCollisionRecs(punch.rect, er))
+                    {
+                        e->hp      -= punch.damage;
+                        e->velocity = (Vector2){ punch.owner->direction * 200, -30 };
+                        e->isHit    = true;
+                        e->hitTimer = 0;
+                        if (e->hp <= 0) { e->hp = 0; e->state = ENEMY_STATE_DEAD; e->active = false; }
+                        AddDamageText(&damageList, punch.damage,
+                            (Vector2){ e->position.x + 10, e->position.y - 20 });
+                        punch.active = false;
+                        break;
+                    }
+                }
+            }
+            if (bullet.active)
+            {
+                for (Enemy *e = enemies; e != NULL; e = e->next)
+                {
+                    if (!e->active) continue;
+                    Animation *anim = &e->sprite;
+                    int fw = anim->texture.width  / anim->cols;
+                    int fh = anim->texture.height / anim->rows;
+                    Rectangle er = { e->position.x, e->position.y, fw, fh };
+
+                    if (CheckCollisionRecs(bullet.rect, er))
+                    {
+                        e->hp      -= bullet.damage;
+                        e->velocity = (Vector2){ p1.direction * 150, -20 };
+                        e->isHit    = true;
+                        e->hitTimer = 0;
+                        if (e->hp <= 0) { e->hp = 0; e->state = ENEMY_STATE_DEAD; e->active = false; }
+                        AddDamageText(&damageList, bullet.damage,
+                            (Vector2){ e->position.x + 10, e->position.y - 20 });
+                        bullet.active = false;
+                        break;
+                    }
+                }
+            }
             UpdatePlayer(&p1, speed, walls, 4, animSpeed);
             UpdatePlayer(&p2, speed, walls, 4, animSpeed);
             UpdateHitbox(&punch);
             UpdateProjectile(&bullet);
-            
-            // Colisões e Sistema de Bloqueio (Soco P2 -> P1)
-            if (punch.active && punch.owner != &p1 && CheckCollisionRecs(punch.rect, GetPlayerRect(&p1)))
-            {
-                float attackDir = punch.owner->direction;
-                bool fromFront  = (p1.direction == -attackDir);
-
-                if (p1.isBlocking && fromFront) {
-                    p1.velocity.x = punch.knockback.x * 0.2f; p1.velocity.y = punch.knockback.y * 0.2f;
-                } else {
-                    ApplyHit(&p1, punch.knockback, punch.damage);
-                    AddDamageText(&damageList, punch.damage, (Vector2){ p1.position.x + 20, p1.position.y - 20 });
-                }
-                punch.active = false;
-            }
-
-            // Colisões e Sistema de Bloqueio (Tiro P1 -> P2)
-            if (bullet.active && CheckCollisionRecs(bullet.rect, GetPlayerRect(&p2)))
-            {
-                bool fromFront = (p2.direction == -p1.direction);
-
-                if (p2.isBlocking && fromFront) {
-                    p2.velocity.x = bullet.knockback.x * 0.2f; p2.velocity.y = bullet.knockback.y * 0.2f;
-                    p2.isHit = true; p2.hitTimer = 0;
-                } else {
-                    ApplyHit(&p2, bullet.knockback, bullet.damage);
-                    AddDamageText(&damageList, bullet.damage, (Vector2){ p2.position.x + 20, p2.position.y - 20 });
-                }
-                bullet.active = false;
-            }
 
             // Verifica Mortes
-            if (p1.hp <= 0) {
-                gameOver = true; winner = 2; topScores[0] += 10;
-            } else if (p2.hp <= 0) {
-                gameOver = true; winner = 1; topScores[0] += 10;
+            if (p1.hp <= 0 && !p1.isDead) {
+                p1.isDead   = true;
+                p1.hp       = 0;
+                p1.state    = STATE_DEAD;
+                p1.velocity = (Vector2){0, 0};
+                p1.isHit    = false;
+            }
+            if (p2.hp <= 0 && !p2.isDead) {
+                p2.isDead   = true;
+                p2.hp       = 0;
+                p2.state    = STATE_DEAD;
+                p2.velocity = (Vector2){0, 0};
+                p2.isHit    = false;
+            }
+            if (p1.isDead && p2.isDead) {
+                gameOver = true;
+                winner   = 0;
             }
         }
         else 
         {
             
             // TELA DE GAME OVER
- 
             if (IsKeyPressed(KEY_ENTER)) {
                 // Reinicia os Status
-                p1.hp = p1.maxHp; p1.position = (Vector2){400.0f, 300.0f}; p1.state = STATE_SPRITE; p1.isHit = false;
-                p2.hp = p2.maxHp; p2.position = (Vector2){200.0f, 300.0f}; p2.state = STATE_SPRITE; p2.isHit = false;
-                
+                p1.hp = p1.maxHp; p1.position = (Vector2){400.0f, 300.0f};
+                p1.state = STATE_SPRITE; p1.isHit = false; p1.isDead = false;
+                p2.hp = p2.maxHp; p2.position = (Vector2){200.0f, 300.0f};
+                p2.state = STATE_SPRITE; p2.isHit = false; p2.isDead = false;
                 punch.active = false; bullet.active = false;
                 FreeDamageTexts(&damageList);
-                
-                gameOver = false;
-                winner = 0;
+                gameOver = false; winner = 0;
             }
         }
 
-        // RENDERIZAÇÃO E DESENHO
+        // RENDER E DESENHO
         
         BeginDrawing();
         ClearBackground(RAYWHITE);
@@ -377,13 +403,12 @@ int main()
         DrawHitbox(punch, p2.direction);
         DrawProjectile(bullet, p1.direction);
 
-        // INTERFACE (BARRAS DE VIDA E DANOS)
         DrawHealthBar(20, 30, p1.hp, p1.maxHp, GREEN, "GUMZ (P1)");
         DrawHealthBar(480, 30, p2.hp, p2.maxHp, BLUE, "BUBBLES (P2)");
         
         UpdateAndDrawDamageTexts(&damageList);
 
-        // Exibe a mensagem de Feedback de Save (Matrizes)
+
         if (showSaveMessage && historyList != NULL) {
             const char* currentSaveName = saveNames[(historyList->id - 1) % 10]; 
             DrawText(TextFormat("%s Salvo/Carregado!", currentSaveName), 300, 100, 20, DARKBLUE);
@@ -392,11 +417,9 @@ int main()
         // Score na tela
         DrawText(TextFormat("Top Score: %s - %d pts", topNames[0], topScores[0]), 300, 560, 20, WHITE);
 
-        // Tela Preta Translúcida de Morte
         if (gameOver) {
             DrawRectangle(0, 0, 800, 600, Fade(BLACK, 0.7f));
-            if (winner == 1) DrawText("GUMZ (P1) VENCEU!", 220, 250, 40, GREEN);
-            else if (winner == 2) DrawText("BUBBLES (P2) VENCEU!", 190, 250, 40, BLUE);
+            DrawText("GAME OVER", 280, 250, 40, RED);
             DrawText("Pressione ENTER para jogar novamente", 200, 330, 20, LIGHTGRAY);
         }
 
@@ -412,4 +435,4 @@ int main()
     
     CloseWindow();
     return 0;
-}
+}   

@@ -40,6 +40,7 @@ typedef struct Player {
     int maxHp;
 
     bool isBlocking;
+    bool isDead;
     
 } Player;
 
@@ -49,6 +50,7 @@ typedef enum {
     STATE_ATTACK,
     STATE_HIT,
     STATE_BLOCK,
+    STATE_DEAD,
 } PlayerState;
 
 void UpdatePlayer(Player *p, float speed, Rectangle *walls, int wallCount, float animSpeed);

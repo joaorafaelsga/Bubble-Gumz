@@ -2,6 +2,20 @@
 
 void DrawPlayer(Player p)
 {
+     if (p.state == STATE_DEAD)
+    {
+        Animation anim = p.sprite;
+        int frameW = anim.texture.width  / anim.cols;
+        int frameH = anim.texture.height / anim.rows;
+
+        Rectangle source = { 0, 0, frameW, frameH };
+        if (p.direction == -1) { source.x = frameW; source.width = -frameW; }
+
+        Rectangle dest = { p.position.x, p.position.y, frameW, frameH };
+        DrawTexturePro(anim.texture, source, dest,(Vector2){0,0}, 0, Fade(WHITE, 0.4f));
+        return;
+    }
+
     Animation anim;
 
     if (p.state == STATE_ATTACK)
