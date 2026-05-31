@@ -8,6 +8,8 @@
 #include "projectile.h"
 #include "ui.h"
 #include "menu.h"
+#include "wave.h"
+#include "enemy.h"
 
 // (Sistema de Scores)
 #define MAX_SCORES 5
@@ -76,13 +78,19 @@ int main()
 
 
     Texture2D particleSheet = LoadTexture("assets/particles/p-atck.png");
+    //INIMIGOS
+    Texture2D enemy1Sprite = LoadTexture("assets/Enemies/Enemy1.png");
+    Texture2D enemy1Atk    = LoadTexture("assets/Enemies/Enemy1.png");
+    Texture2D enemy2Sprite = LoadTexture("assets/Enemies/Enemy2.png");
+    Texture2D enemy2Atk    = LoadTexture("assets/Enemies/Enemy2Atk.png");
+
     SetTextureFilter(sprite1, TEXTURE_FILTER_POINT);
     SetTextureFilter(sprite2, TEXTURE_FILTER_POINT);
 
     Menu menu;
     InitMenu(&menu, menuBg);
     GameScreen currentScreen = SCREEN_MENU;
-    int currentFase = 0;
+    int currentFase = 1;
     
     //Gumz
     Player p1 = {0};
@@ -127,6 +135,16 @@ int main()
 
     float moveSpeed = 200.0f;
     float animSpeed = 0.1f;
+
+    Enemy       *enemies     = NULL;
+    EnemyBullet *enemyBullets = NULL;
+
+    WaveSystem ws;
+    int totalWaves = (currentFase == 1) ? 2 : 1;
+    InitWaves(&ws, totalWaves);
+    SpawnWave(&ws, &enemies,
+            enemy1Sprite, enemy1Atk,
+            enemy2Sprite, enemy2Atk, currentFase);
 
     while (!WindowShouldClose())
     {
@@ -216,6 +234,24 @@ int main()
 
         UpdateHitbox(&punch);
         UpdateProjectile(&bullet);
+
+        UpdateEnemies(enemies, &p1, &p2, &enemyBullets, walls, 4);
+        UpdateEnemyBullets(&enemyBullets, &p1, &p2);
+        UpdateWaves(&ws, &enemies, &enemyBullets,
+                    enemy1Sprite, enemy1Atk,
+                    enemy2Sprite, enemy2Atk, currentFase);
+
+        if (IsFaseComplete(ws) && currentFase == 1)
+        {
+            currentFase = 2;
+            bg = LoadTexture("assets/cenarios/cenario2.png");
+            FreeEnemyBullets(&enemyBullets);
+            InitWaves(&ws, 1);
+            SpawnWave(&ws, &enemies,
+                    enemy1Sprite, enemy1Atk,
+                    enemy2Sprite, enemy2Atk, currentFase);
+            SaveGame(currentFase);
+        }
         
 
         if (punch.active && punch.owner != &p1 &&
@@ -283,6 +319,9 @@ int main()
             (Vector2){0,0},0,WHITE);
 
         DrawPlayersSorted(&p1, &p2);
+        DrawEnemies(enemies);
+        DrawEnemyBullets(enemyBullets);
+        DrawWaveInfo(ws);
 
         DrawHitbox(punch, p2.direction);
         DrawProjectile(bullet, p1.direction);
@@ -302,7 +341,10 @@ int main()
     // Salvar no arquivo as pontuações e libertar os ponteiros alocados (free) da lista
     SaveScores();
     FreeDamageTexts(&damageList);
-
+    
+    FreeEnemies(&enemies);
+    FreeEnemyBullets(&enemyBullets);
+    
     CloseWindow();
     return 0;
 }
