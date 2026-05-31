@@ -102,7 +102,7 @@ int main()
         float speed = moveSpeed * GetFrameTime();
         if(IsKeyPressed(KEY_F11)) ToggleFullscreen();
         
-        // MENU 
+        // ================== MENU ==================
         if (currentScreen == SCREEN_MENU)
         {
             int savedFase = LoadGame();
@@ -142,7 +142,9 @@ int main()
                 if (menu.currentItem == MENU_NEWGAME) 
                 {
                     DeleteSave(); FILE *fClear = fopen("savegame.txt", "w"); if (fClear) fclose(fClear); FreeSaves(&historyList);
-                    remove("score_save.txt"); 
+                    
+                    // ESCREVE FORÇADAMENTE UM ZERO NO SCORE DO FICHEIRO PARA EVITAR BUGS!
+                    FILE *sf = fopen("score_save.txt", "w"); if (sf) { fprintf(sf, "0"); fclose(sf); }
                     
                     currentFase = 1; currentScore = 0;
                     p1.hp = p1.maxHp; p1.position = (Vector2){400.0f, 300.0f}; p1.isHit = false; p1.state = STATE_SPRITE; p1.isDead = false;
@@ -172,6 +174,7 @@ int main()
             continue;
         }
         
+        // ================== SAVE SYSTEM ==================
         if (IsKeyPressed(KEY_ONE)) { 
             AddSaveState(&historyList, p1, p2); SaveToFile(historyList); SaveGame(currentFase);         
             FILE *sf = fopen("score_save.txt", "w"); if(sf) { fprintf(sf, "%d", currentScore); fclose(sf); }
@@ -200,7 +203,7 @@ int main()
 
         if (currentScore > topScores[0]) { topScores[0] = currentScore; strcpy(topNames[0], "P1"); }
 
-        // UPDATES DA ENGINE 
+        // ================== UPDATES DA ENGINE ==================
         UpdateEnemies(enemies, &p1, &p2, &enemyBullets, walls, 4);
         UpdateEnemyBullets(&enemyBullets, &p1, &p2);
         UpdateWaves(&ws, &enemies, &enemyBullets, enemy1Sprite, enemy1Atk, enemy2Sprite, enemy2Atk, bossSprite, bossAtk, currentFase, &p1, &p2);
@@ -214,12 +217,16 @@ int main()
                 if (p2.isDead) { p2.isDead = false; p2.hp = p2.maxHp / 2; p2.state = STATE_SPRITE; }
             } else if (currentFase == 2 && !gameOver) {
                 gameOver = true; winner = 3; SaveScores(); 
+                
+                // APAGA O SAVE AO ZERAR O JOGO
+                DeleteSave(); FILE *fClear = fopen("savegame.txt", "w"); if (fClear) fclose(fClear); FreeSaves(&historyList);
+                FILE *sf = fopen("score_save.txt", "w"); if (sf) { fprintf(sf, "0"); fclose(sf); }
             }
         }
         
         if (showSaveMessage) { messageTimer -= GetFrameTime(); if (messageTimer <= 0) showSaveMessage = false; }
         
-        // LÓGICA DE COMBATE 
+        // ================== LÓGICA DE COMBATE ==================
         if (!gameOver) 
         {
             if (!p2.isDead && IsKeyPressed(KEY_K) && p2.state != STATE_ATTACK) {
@@ -243,7 +250,6 @@ int main()
                     if (!e->active) continue;
                     
                     if (e->type == ENEMY_BOSS) {
-                        // Bubbles soco no Boss (SÓ LEVA DANO SE O BRAÇO ESTIVER LEVANTADO E ACERTAR NO CORPO)
                         if (e->isVulnerable && CheckCollisionRecs(punch.rect, e->bodyRect)) {
                             e->hp -= punch.damage; e->isHit = true; e->hitTimer = 0;
                             if (e->hp <= 0) { e->hp = 0; e->state = ENEMY_STATE_DEAD; e->active = false; currentScore += 500; }
@@ -254,7 +260,6 @@ int main()
                             punch.active = false; break;
                         }
                     } else {
-                        // Inimigos Normais
                         Animation *anim = &e->sprite; int fw = anim->texture.width / anim->cols; int fh = anim->texture.height / anim->rows;
                         Rectangle er = { e->position.x, e->position.y, fw, fh };
                         if (CheckCollisionRecs(punch.rect, er)) {
@@ -273,7 +278,6 @@ int main()
                     if (!e->active) continue;
 
                     if (e->type == ENEMY_BOSS) {
-                        // Balas grudam nas rodas!
                         bool hitSomething = false;
                         if (e->wheel1Hp > 0 && CheckCollisionRecs(bullet.rect, e->wheel1Rect)) {
                             e->wheel1Hp--; hitSomething = true;
@@ -288,7 +292,6 @@ int main()
 
                         if (hitSomething) { bullet.active = false; break; }
                     } else {
-                        // Inimigos Normais
                         Animation *anim = &e->sprite; int fw = anim->texture.width / anim->cols; int fh = anim->texture.height / anim->rows;
                         Rectangle er = { e->position.x, e->position.y, fw, fh };
                         if (CheckCollisionRecs(bullet.rect, er)) {
@@ -303,19 +306,33 @@ int main()
             UpdatePlayer(&p1, speed, walls, 4, animSpeed); UpdatePlayer(&p2, speed, walls, 4, animSpeed);
             UpdateHitbox(&punch); UpdateProjectile(&bullet);
 
+            // DETEÇÃO DE MORTE
             if (p1.hp <= 0 && !p1.isDead) { p1.isDead = true; p1.hp = 0; p1.state = STATE_DEAD; p1.velocity = (Vector2){0, 0}; p1.isHit = false; }
             if (p2.hp <= 0 && !p2.isDead) { p2.isDead = true; p2.hp = 0; p2.state = STATE_DEAD; p2.velocity = (Vector2){0, 0}; p2.isHit = false; }
-            if (p1.isDead && p2.isDead) { gameOver = true; winner = 0; SaveScores(); }
+            
+            // SE OS DOIS MORREREM
+            if (p1.isDead && p2.isDead) { 
+                gameOver = true; winner = 0; SaveScores(); 
+                
+                // APAGA O SAVE IMEDIATAMENTE (Escreve zeros nos ficheiros!)
+                DeleteSave(); 
+                FILE *fClear = fopen("savegame.txt", "w"); if (fClear) fclose(fClear); FreeSaves(&historyList);
+                FILE *sf = fopen("score_save.txt", "w"); if (sf) { fprintf(sf, "0"); fclose(sf); }
+            }
         }
         else 
         {
-            if (IsKeyPressed(KEY_SPACE)) {
+            // RECOMEÇAR DEPOIS DO ECRÃ DE GAME OVER / VITÓRIA
+            if (IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ENTER)) {
                 p1.hp = p1.maxHp; p1.position = (Vector2){400.0f, 300.0f}; p1.state = STATE_SPRITE; p1.isHit = false; p1.isDead = false;
                 p2.hp = p2.maxHp; p2.position = (Vector2){200.0f, 300.0f}; p2.state = STATE_SPRITE; p2.isHit = false; p2.isDead = false;
                 punch.active = false; bullet.active = false; FreeDamageTexts(&damageList); gameOver = false; winner = 0;
 
-                currentFase = 1; currentScore = 0; remove("score_save.txt"); 
+                currentFase = 1; currentScore = 0;
+                
+                // GARANTE QUE TUDO ESTÁ LIMPO AO VOLTAR AO MENU
                 DeleteSave(); FILE *fClear = fopen("savegame.txt", "w"); if (fClear) fclose(fClear); FreeSaves(&historyList);
+                FILE *sf = fopen("score_save.txt", "w"); if (sf) { fprintf(sf, "0"); fclose(sf); }
 
                 bg = LoadTexture("assets/cenarios/Cenario1_2.0.png");
                 FreeEnemies(&enemies); FreeEnemyBullets(&enemyBullets); enemies = NULL; enemyBullets = NULL;
@@ -325,7 +342,7 @@ int main()
             }
         }
         
-        // RENDERIZAÇÃO
+        // ================== RENDERIZAÇÃO ==================
         BeginDrawing(); ClearBackground(RAYWHITE);
         DrawTexturePro(bg, (Rectangle){0,0,bg.width,bg.height}, (Rectangle){0,0,GetScreenWidth(),GetScreenHeight()}, (Vector2){0,0},0,WHITE);
 
