@@ -7,7 +7,8 @@
 
 typedef enum {
     ENEMY_MELEE,
-    ENEMY_RANGED
+    ENEMY_RANGED,
+    ENEMY_BOSS // O nosso Trator Boss
 } EnemyType;
 
 typedef enum {
@@ -21,7 +22,7 @@ typedef struct Bullet {
     Rectangle rect;
     Vector2 velocity;
     bool active;
-    struct Bullet *next;  //lista encadeada de projéteis
+    struct Bullet *next;  
 } EnemyBullet;
 
 typedef struct Enemy {
@@ -39,26 +40,30 @@ typedef struct Enemy {
     bool    isHit; 
     float   hitTimer;
 
-    // Animação
+    //VARIÁVEIS EXCLUSIVAS DO BOSS (TRATOR)
+    int wheel1Hp;       // HP da Roda Superior (Tiros de Chiclete)
+    int wheel2Hp;       // HP da Roda Inferior
+    bool isVulnerable;  // Fica true quando as rodas param
+    Rectangle wheel1Rect;
+    Rectangle wheel2Rect;
+    Rectangle bodyRect;
+   
+
     Animation sprite;
     Animation attackSprite;
     int frame;
     float animTime;
 
     bool active;
-
     struct Enemy *next; 
 } Enemy;
 
-// Lista de inimigos
 Enemy *CreateEnemy(Vector2 pos, EnemyType type, Texture2D sprite, Texture2D attackSprite);
-void UpdateEnemies(Enemy *head, Player *p1, Player *p2,
-                   EnemyBullet **bullets, Rectangle *walls, int wallCount);
+void UpdateEnemies(Enemy *head, Player *p1, Player *p2, EnemyBullet **bullets, Rectangle *walls, int wallCount);
 void DrawEnemies(Enemy *head);
 void FreeEnemies(Enemy **head);
 int  CountActiveEnemies(Enemy *head);
 
-// Lista de projéteis inimigos
 void UpdateEnemyBullets(EnemyBullet **head, Player *p1, Player *p2);
 void DrawEnemyBullets(EnemyBullet *head);
 void FreeEnemyBullets(EnemyBullet **head);

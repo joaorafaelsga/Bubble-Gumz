@@ -10,19 +10,19 @@ void InitWaves(WaveSystem *ws, int totalWaves)
 }
 
 static Vector2 spawnPosFase1[2][4] = {
-    {{700,300},{650,350},{720,280},{680,320}},
-
-    {{750,300},{700,280},{760,340},{730,310}},
+    {{700,300},{650,350},{720,280},{680,320}}, // Wave 1 da Fase 1
+    {{750,300},{700,280},{760,340},{730,310}}, // Wave 2 da Fase 1
 };
 
-static Vector2 spawnPosFase2[1][6] = {
-    // Wave 1
-    {{700,300},{650,350},{720,280},{680,320},{760,340},{730,310}},
+static Vector2 spawnPosFase2[2][6] = {
+    {{700,300},{650,350},{720,280},{680,320},{760,340},{730,310}}, 
+    {{700,320},{0,0},{0,0},{0,0},{0,0},{0,0}}                      
 };
 
 void SpawnWave(WaveSystem *ws, Enemy **enemies,
                Texture2D meleeSprite, Texture2D meleeAtk,
                Texture2D rangedSprite, Texture2D rangedAtk,
+               Texture2D bossSprite, Texture2D bossAtk,
                int fase)
 {
     FreeEnemies(enemies);
@@ -31,14 +31,12 @@ void SpawnWave(WaveSystem *ws, Enemy **enemies,
     {
         int w = ws->currentWave;
         if (w == 0) {
-            // Wave 1
             for (int i = 0; i < 4; i++) {
                 Enemy *e = CreateEnemy(spawnPosFase1[0][i],ENEMY_MELEE, meleeSprite, meleeAtk);
                 e->next  = *enemies;
                 *enemies = e;
             }
         } else {
-            // Wave 2
             for (int i = 0; i < 4; i++) {
                 Enemy *e = CreateEnemy(spawnPosFase1[1][i],ENEMY_RANGED, rangedSprite, rangedAtk);
                 e->next  = *enemies;
@@ -48,15 +46,23 @@ void SpawnWave(WaveSystem *ws, Enemy **enemies,
     }
     else 
     {
-        for (int i = 0; i < 3; i++) {
-            Enemy *e = CreateEnemy(spawnPosFase2[0][i], ENEMY_MELEE, meleeSprite, meleeAtk);
-            e->next  = *enemies;
-            *enemies = e;
-        }
-        for (int i = 3; i < 6; i++) {
-            Enemy *e = CreateEnemy(spawnPosFase2[0][i],  ENEMY_RANGED, rangedSprite, rangedAtk);
-            e->next  = *enemies;
-            *enemies = e;
+        int w = ws->currentWave;
+        if (w == 0) {
+            for (int i = 0; i < 3; i++) {
+                Enemy *e = CreateEnemy(spawnPosFase2[0][i], ENEMY_MELEE, meleeSprite, meleeAtk);
+                e->next  = *enemies;
+                *enemies = e;
+            }
+            for (int i = 3; i < 6; i++) {
+                Enemy *e = CreateEnemy(spawnPosFase2[0][i],  ENEMY_RANGED, rangedSprite, rangedAtk);
+                e->next  = *enemies;
+                *enemies = e;
+            }
+        } else {
+            // Wave 2: BATALHA CONTRA O BOSS TRATOR!
+            Enemy *boss = CreateEnemy(spawnPosFase2[1][0], ENEMY_BOSS, bossSprite, bossAtk);
+            boss->next = *enemies;
+            *enemies = boss;
         }
     }
 
@@ -64,19 +70,19 @@ void SpawnWave(WaveSystem *ws, Enemy **enemies,
 }
 
 void UpdateWaves(WaveSystem *ws,Enemy **enemies,EnemyBullet **bullets,Texture2D meleeSprite, 
-Texture2D meleeAtk,Texture2D rangedSprite,Texture2D rangedAtk, int fase, Player *p1, Player *p2)
+Texture2D meleeAtk,Texture2D rangedSprite,Texture2D rangedAtk, Texture2D bossSprite, Texture2D bossAtk, int fase, Player *p1, Player *p2)
 {
     if (ws->waveCleared)
     {
         ws->transitionTimer += GetFrameTime();
 
-        if (ws->transitionTimer >= 2.0f) // 2s de pausa entre waves
+        if (ws->transitionTimer >= 2.0f) 
         {
             ws->transitionTimer = 0;
             ws->currentWave++;
 
             if (ws->currentWave < ws->totalWaves) {
-                SpawnWave(ws, enemies,meleeSprite,meleeAtk,rangedSprite,rangedAtk,fase);
+                SpawnWave(ws, enemies,meleeSprite,meleeAtk,rangedSprite,rangedAtk,bossSprite,bossAtk,fase);
                 if (p1->isDead) {
                     p1->isDead = false;
                     p1->hp     = p1->maxHp / 2;
@@ -92,7 +98,6 @@ Texture2D meleeAtk,Texture2D rangedSprite,Texture2D rangedAtk, int fase, Player 
         return;
     }
 
-    // Checa se a wave tw limpa
     if (CountActiveEnemies(*enemies) == 0)
         ws->waveCleared = true;
 }
