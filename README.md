@@ -1,11 +1,15 @@
 # Bubble-Gumz
 
-Recriação de um jogo *Beat'em Up* em C utilizando a biblioteca [raylib](https://www.raylib.com/). O objetivo é derrotar ondas de inimigos, gerir a vida dos personagens (Gumz e Bubbles) e enfrentar bosses desafiadores em cenários dinâmicos.
+Recriação de um *Beat'em Up* em C utilizando a biblioteca [raylib](https://www.raylib.com/). O objetivo é derrotar ondas de inimigos, gerir a vida dos personagens (Gumz e Bubbles) e enfrentar bosses desafiadores em cenários dinâmicos.
+
+## Demonstração
+Assista ao vídeo de showcase do jogo:
+[https://youtu.be/GeqsiCbN6JY](https://youtu.be/GeqsiCbN6JY)
 
 ## Funcionalidades
 
 * **Sistema de Combate:** Lógica de hitboxes, ataques e projéteis.
-* **Gestão de Inimigos:** Inimigos com IA básica, suporte para tipos diferentes (Melee, Ranged) e Boss "Trator".
+* **Gestão de Inimigos:** Inimigos com IA básica e suporte para tipos diferentes (Melee, Ranged) e Boss "Trator".
 * **Sistema de Waves:** Progressão automática baseada em ondas de inimigos.
 * **Persistência:** Sistema de Save/Load de progresso e ranking (persistido em arquivo `.txt`).
 * **Multijogador:** Suporte para dois jogadores (P1 e P2) com controlos locais.
@@ -29,10 +33,11 @@ Recriação de um jogo *Beat'em Up* em C utilizando a biblioteca [raylib](https:
 | **Menu Principal** | M |
 | **Confirmar / Iniciar** | Espaço |
 
-## Como Compilar (Makefile)
+## Como Compilar e Jogar
 
-Utiliza o `Makefile` na raiz do projeto para automatizar a compilação:
+Para facilitar o processo, incluímos um `Makefile` que automatiza a compilação. Basta teres o `make` instalado no teu sistema.
 
+### Makefile
 ```makefile
 # Nome do executável
 TARGET = bubble-gumz
