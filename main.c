@@ -237,31 +237,39 @@ int main()
 
             if (!p1.isDead && IsKeyPressed(KEY_R) && !bullet.active && p1.state != STATE_ATTACK) {
                 p1.state = STATE_ATTACK; p1.stateTimer = 0; p1.frame = 0; p1.animTime = 0;
-                bullet.active = true; bullet.timer = 0; bullet.lifetime = 1.0f; bullet.damage = 10;
+                bullet.active = true; bullet.timer = 0; bullet.lifetime = 1.0f; bullet.damage = 15;
                 bullet.velocity = (Vector2){ p1.direction * 400, 0 }; bullet.knockback = (Vector2){ p1.direction * 200, -30 };
                 bullet.rect = (Rectangle){ p1.position.x + (p1.direction == 1 ? 44 : -20), p1.position.y + 25, 20, 20 };
             }
            
             // SOCOS BUBBLES
+            // SOCOS BUBBLES
             if (punch.active) {
                 for (Enemy *e = enemies; e != NULL; e = e->next) {
                     if (!e->active) continue;
-                    
+
                     if (e->type == ENEMY_BOSS) {
                         if (e->isVulnerable && CheckCollisionRecs(punch.rect, e->bodyRect)) {
-                            e->hp -= punch.damage; e->isHit = true; e->hitTimer = 0;
-                            if (e->hp <= 0) { e->hp = 0; e->state = ENEMY_STATE_DEAD; e->active = false; currentScore += 500; }
-                            AddDamageText(&damageList, punch.damage, (Vector2){ e->bodyRect.x + 20, e->bodyRect.y + 100 });
-                            punch.active = false; break;
-                        } else if (CheckCollisionRecs(punch.rect, e->wheel1Rect) || CheckCollisionRecs(punch.rect, e->wheel2Rect) || CheckCollisionRecs(punch.rect, e->bodyRect)) {
-                            AddDamageText(&damageList, 0, (Vector2){ punch.rect.x, punch.rect.y }); 
+                            e->hp -= punch.damage;
+                            e->isHit = true; e->hitTimer = 0;
+                            if (e->hp <= 0) {
+                                e->hp = 0; e->state = ENEMY_STATE_DEAD;
+                                e->active = false; currentScore += 500;
+                            }
+                            AddDamageText(&damageList, punch.damage,
+                                (Vector2){ e->bodyRect.x + 20, e->bodyRect.y + 100 });
                             punch.active = false; break;
                         }
+                        // Nao cancela o punch — deixa passar sem fazer nada
                     } else {
-                        Animation *anim = &e->sprite; int fw = anim->texture.width / anim->cols; int fh = anim->texture.height / anim->rows;
+                        Animation *anim = &e->sprite;
+                        int fw = anim->texture.width / anim->cols;
+                        int fh = anim->texture.height / anim->rows;
                         Rectangle er = { e->position.x, e->position.y, fw, fh };
                         if (CheckCollisionRecs(punch.rect, er)) {
-                            e->hp -= punch.damage; e->velocity = (Vector2){ punch.owner->direction * 200, -30 }; e->isHit = true; e->hitTimer = 0;
+                            e->hp -= punch.damage;
+                            e->velocity = (Vector2){ punch.owner->direction * 200, -30 };
+                            e->isHit = true; e->hitTimer = 0;
                             if (e->hp <= 0) { e->hp = 0; e->state = ENEMY_STATE_DEAD; e->active = false; currentScore += 10; }
                             AddDamageText(&damageList, punch.damage, (Vector2){ e->position.x + 10, e->position.y - 20 });
                             punch.active = false; break;
