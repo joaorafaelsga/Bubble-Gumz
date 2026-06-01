@@ -64,3 +64,11 @@ run: all
 
 clean:
 	rm -f $(TARGET)
+# Compila o jogo
+make
+
+# Compila e executa o jogo imediatamente
+make run
+
+# Limpa os arquivos compilados
+make clean
