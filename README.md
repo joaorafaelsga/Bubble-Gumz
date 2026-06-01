@@ -1,28 +1,61 @@
 # Bubble-Gumz
 
-Bubble-Gumz é um jogo do género *Beat'em Up* desenvolvido em linguagem C, utilizando a biblioteca Raylib para renderização e manipulação de assets.
+Recriação de um jogo *Beat'em Up* em C utilizando a biblioteca [raylib](https://www.raylib.com/). O objetivo é derrotar ondas de inimigos, gerir a vida dos personagens (Gumz e Bubbles) e enfrentar bosses desafiadores em cenários dinâmicos.
 
-## Funcionalidades Principais
+## Funcionalidades
 
-O projeto está organizado em diversos módulos para garantir uma arquitetura modular e escalável:
+* **Sistema de Combate:** Lógica de hitboxes, ataques e projéteis.
+* **Gestão de Inimigos:** Inimigos com IA básica, suporte para tipos diferentes (Melee, Ranged) e Boss "Trator".
+* **Sistema de Waves:** Progressão automática baseada em ondas de inimigos.
+* **Persistência:** Sistema de Save/Load de progresso e ranking (persistido em arquivo `.txt`).
+* **Multijogador:** Suporte para dois jogadores (P1 e P2) com controlos locais.
 
-*   **Sistema de Combate (`combat.c`, `projectile.c`):** Lógica completa de ataques, detetores de hitboxes e projéteis.
-*   **Gestão de Inimigos (`enemy.c`):** Suporte para diferentes tipos de inimigos (Melee, Ranged) e confrontos contra Bosses[cite: 5].
-*   **Sistema de Waves (`wave.c`):** Progressão de jogo baseada em ondas de inimigos, permitindo uma dificuldade crescente[cite: 5].
-*   **Narrativa (`cutscene.c`):** Integração de cutscenes para contar a história do jogo[cite: 5].
-*   **Sistema de Save (`save_system.c`):** Funcionalidade para gravar e carregar o progresso do jogador, garantindo que o estado do jogo persista[cite: 5].
-*   **UI e Menu (`ui.c`, `menu.c`):** Interface de utilizador e menus de navegação[cite: 5].
+## Controles
 
-## Estrutura do Projeto
+### Jogabilidade
 
-A organização dos assets e do código segue uma separação lógica:
+| Ação | Jogador 1 (Gumz) | Jogador 2 (Bubbles) |
+| :--- | :--- | :--- |
+| **Movimentação** | W, A, S, D | Setas do Teclado |
+| **Ataque** | R | K |
+| **Dash / Bloqueio** | Q (Dash) | 0 (Numpad - Bloqueio) |
 
-*   `assets/`: Contém os sprites de jogadores, inimigos, boss, cenários e partículas[cite: 5].
-*   `src/` (ou raiz): Contém a lógica de jogo dividida em ficheiros `.c` e `.h`[cite: 5].
+### Sistema e Menu
 
-## Como Compilar
+| Ação | Tecla |
+| :--- | :--- |
+| **Salvar Jogo** | 1 |
+| **Carregar Jogo** | 2 |
+| **Menu Principal** | M |
+| **Confirmar / Iniciar** | Espaço |
 
-Para compilar o projeto no Linux (GCC), utiliza o seguinte comando na raiz do projeto:
+## Como Compilar (Makefile)
 
-```bash
-gcc *.c -o jogo -I. -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+Utiliza o `Makefile` na raiz do projeto para automatizar a compilação:
+
+```makefile
+# Nome do executável
+TARGET = bubble-gumz
+
+# Compilador e Flags
+CC = gcc
+CFLAGS = -I. -Wall
+
+# Bibliotecas (Detecta SO)
+ifeq ($(OS),Windows_NT)
+    LIBS = -lraylib -lopengl32 -lgdi32 -lwinmm
+    TARGET := $(TARGET).exe
+else
+    LIBS = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+endif
+
+SRC = *.c
+
+all:
+	$(CC) $(SRC) -o $(TARGET) $(CFLAGS) $(LIBS)
+
+run: all
+	./$(TARGET)
+
+clean:
+	rm -f $(TARGET)
