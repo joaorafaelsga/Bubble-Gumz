@@ -229,7 +229,7 @@ int main()
         {
             if (!p2.isDead && IsKeyPressed(KEY_K) && p2.state != STATE_ATTACK) {
                 p2.state = STATE_ATTACK; p2.stateTimer = 0; p2.frame = 0; p2.animTime = 0;
-                punch.active = true; punch.timer = 0; punch.duration = 0.15f; punch.damage = 15;
+                punch.active = true; punch.timer = 0; punch.duration = 0.15f; punch.damage = 25;
                 punch.knockback = (Vector2){ p2.direction * 300, -50 };
                 punch.rect = (Rectangle){ p2.position.x + (p2.direction == 1 ? 40 : -20), p2.position.y + 35, 40, 40 };
                 punch.owner = &p2; 

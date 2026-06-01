@@ -4,7 +4,7 @@
 #include <raylib.h>
 #include <stdbool.h>
 
-#define CUTSCENE_COUNT 3
+#define CUTSCENE_COUNT 4
 #define MAX_LINES 6
 
 typedef struct {
